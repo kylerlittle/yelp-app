@@ -8,7 +8,7 @@ const Pool = require('pg').Pool;
  */
 const pool = new Pool({
     database: 'Milestone1DB',
-    user: 'kyler',
+    user: process.env.USER,
     host: 'localhost',
     password: '12345',
     port: 5432,
