@@ -149,3 +149,29 @@ CREATE TABLE BusinessParking(
     PRIMARY KEY (business_id),
     FOREIGN KEY (business_id) REFERENCES Business(business_id)
 );
+
+CREATE TABLE BestNights(
+    business_id CHAR(22),
+    sunday BOOLEAN,
+    monday BOOLEAN,
+    tuesday BOOLEAN,
+    wednesday BOOLEAN,
+    thursday BOOLEAN,
+    friday BOOLEAN,
+    saturday BOOLEAN,
+    PRIMARY KEY (business_id),
+    FOREIGN KEY (business_id) REFERENCES Business(business_id)
+);
+
+CREATE TABLE Music(
+    business_id CHAR(22),
+    dj BOOLEAN,
+    background_music BOOLEAN,
+    no_music BOOLEAN,
+    karaoke BOOLEAN,
+    live BOOLEAN,
+    video BOOLEAN,
+    jukebox BOOLEAN,
+    PRIMARY KEY (business_id),
+    FOREIGN KEY (business_id) REFERENCES Business(business_id)
+);
