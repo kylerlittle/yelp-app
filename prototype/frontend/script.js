@@ -101,8 +101,8 @@ function getBusinessesEvent(event) {
 // Populate businesses
 function populateBusinesses(businesses) {
     let businessList = document.getElementById('businessList');
-    businessList.innerHTML = ''; // Delete Children
 
+    businessList.innerHTML = ''; // Delete Children
     console.log(businesses);
 
     for (let i = 0; i < businesses.length; i++) {
