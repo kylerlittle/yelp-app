@@ -35,6 +35,9 @@ function parseBusiness() {
     });
     
     rl.on('line', (line) => {
+        if(line.length < 2) {
+            return; // don't parse a blank line
+        }
         const business = JSON.parse(line);
         
         console.log(`business_id: ${business.business_id},`);
@@ -80,6 +83,9 @@ function parseCheckin() {
     });
     
     rl.on('line', (line) => {
+        if(line.length < 2) {
+            return; // don't parse a blank line
+        }
         const checkin = JSON.parse(line);
         console.log(`business_id: ${checkin.business_id},`);
         console.log(`times: `);
@@ -100,6 +106,9 @@ function parseUser() {
         input: fs.createReadStream('yelp_user.json')
     });
     rl.on('line', (line) => {
+        if(line.length < 2) {
+            return; // don't parse a blank line
+        }
         const user = JSON.parse(line);
         console.log(`Name: ${user.name}`);
         console.log(`user_id: ${user.user_id}`);
