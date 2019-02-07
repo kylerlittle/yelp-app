@@ -1,11 +1,14 @@
 <!doctype html>
 <html lang="en">
-
 <head>
   <meta charset="utf-8">
   <title>Business Search</title>
   <meta name="description" content="Search for a business.">
 
+  <!-- Link to main.css -->
+  <link rel="stylesheet" href="main.css">
+
+  <!-- Link to script.js -->
   <script type="text/javascript" src="./script.js"></script>
   <script>
       document.addEventListener("DOMContentLoaded", function() {
@@ -14,18 +17,32 @@
   </script>
 </head>
 
-
 <body>
-    <!-- State Dropdown Menu -->
-    <select id="stateDropdown">
-        <option value="State">State</option>
-    </select>
+    <div class="search-container">
+        <!-- State Dropdown Menu -->
+        <div class="dropdown-container"> 
+            <p>State</p>
+            <select id="stateDropdown">
+                <option value="State">State</option>
+            </select>
+        </div>
+        
+        <!-- City Dropdown Menu -->
+        <div class="dropdown-container">
+            <p>City</p>
+            <select id="cityDropdown">
+                <option value="City">City</option>
+            </select>
+        </div>
 
-    <!-- City Dropdown Menu -->
-    <select id="cityDropdown">
-        <option value="City">City</option>
-    </select>
-
+        <!-- List of Businesses -->
+        <div class="business-container">
+            <p>Businesses</p>
+            <div id="businessList">
+                <p>Business</p>
+            </div>
+        </div>
+    </div>
+    
 </body>
-
 </html>
