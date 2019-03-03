@@ -11,13 +11,13 @@
 CREATE TABLE YelpUser(
     user_id CHAR(22),
     average_stars NUMERIC(3, 2),  /* 3 == total sig figs, 2 sig figs to right of decimal point */
-    cool INTEGER,
-    fans INTEGER,
-    funny INTEGER,
+    cool INTEGER DEFAULT 0,
+    fans INTEGER DEFAULT 0,
+    funny INTEGER DEFAULT 0,
     user_name VARCHAR(60),   /* Reasonable assumption for a first name. */
-    useful INTEGER,
+    useful INTEGER DEFAULT 0,
     yelping_since DATE,
-    review_count INTEGER,  /* Calculated, but not sure how to do this in PostgreSQL. */
+    review_count INTEGER DEFAULT 0,  /* Calculated Field */
     PRIMARY KEY (user_id)
 );
 
@@ -37,24 +37,15 @@ CREATE TABLE Business(
     business_address VARCHAR(100),  /* Reasonable assumption. */
     business_city VARCHAR(50),
     business_state VARCHAR(50),
-    alcohol VARCHAR(20),   /* Reasonable assumption. Only a few different types though -- 'none', 'beer_and_wine', etc. */
-    noise_level VARCHAR(20),  /* Same situation as 'alcohol' */
-    has_tv BOOLEAN,
+    alcohol VARCHAR(30),   /* Reasonable assumption. Only a few different types though -- 'none', 'beer_and_wine', etc. */
+    noise_level VARCHAR(30),  /* Same situation as 'alcohol' */
     price_range NUMERIC(1, 0),
-    review_count INTEGER,  /* Calculated, but not sure how to do this in PostgreSQL. */
-    average_stars NUMERIC(2, 1),  /* Calculated, but not sure how to do this in PostgreSQL. */
+    review_count INTEGER DEFAULT 0,  /* Calculated Field */
+    average_stars NUMERIC(2, 1) DEFAULT 0.0,  /* Calculated Field */
+    num_checkins INTEGER DEFAULT 0,   /* Calculated Field */
     postal_code NUMERIC(5, 0),  /* 5 digit code. No decimal point. */
-    caters BOOLEAN,
-    has_wifi BOOLEAN,
-    is_open BOOLEAN,   /* This is a 0 or 1 in the JSON, but change in the actual implementation bc that's dumb. */
-    offers_delivery BOOLEAN,
-    restaurants_good_for_groups BOOLEAN,
-    restaurants_table_service BOOLEAN,
+    is_open BOOLEAN,   /* This is a 0 or 1 in the JSON, but change in the actual implementation bc that's dumb. Also I guess this is calculated... */
     restaurants_attire VARCHAR(20),  /* Only a few different types... but whatever. */
-    takes_reservations BOOLEAN,
-    has_outdoor_seating BOOLEAN,
-    accepts_credit_cards BOOLEAN,
-    has_bike_parking BOOLEAN,
     PRIMARY KEY (business_id)
 );
 
@@ -62,10 +53,10 @@ CREATE TABLE Review(
     user_id CHAR(22) NOT NULL,
     business_id CHAR(22) NOT NULL,
     review_id CHAR(22),
-    cool INTEGER,
-    funny INTEGER,
-    useful INTEGER,
-    stars_given NUMERIC(1, 0),
+    cool INTEGER DEFAULT 0,
+    funny INTEGER DEFAULT 0,
+    useful INTEGER DEFAULT 0,
+    stars_given NUMERIC(1, 0) DEFAULT 0,
     date_written DATE,
     review_text TEXT,
     PRIMARY KEY (review_id),
@@ -76,13 +67,13 @@ CREATE TABLE Review(
 /* Longest day of week is Wednesday, 9 chars */
 CREATE DOMAIN day_of_week AS VARCHAR(9)
 CHECK(
-    VALUE = "Sunday"
-    OR VALUE = "Monday"
-    OR VALUE = "Tuesday"
-    OR VALUE = "Wednesday"
-    OR VALUE = "Thursday"
-    OR VALUE = "Friday"
-    OR VALUE = "Saturday"
+    VALUE = 'Sunday'
+    OR VALUE = 'Monday'
+    OR VALUE = 'Tuesday'
+    OR VALUE = 'Wednesday'
+    OR VALUE = 'Thursday'
+    OR VALUE = 'Friday'
+    OR VALUE = 'Saturday'
 );
 
 /* Only need to store the hour of day, so might as well save some space. */
@@ -100,78 +91,46 @@ CREATE TABLE CheckIn(
     business_id CHAR(22),
     checkin_day day_of_week,
     checkin_time hour_of_day,
-    checkin_count SMALLINT,
-    PRIMARY KEY (business_id, checkin_day, hour),
+    checkin_count SMALLINT DEFAULT 0,
+    PRIMARY KEY (business_id, checkin_day, checkin_time),
     FOREIGN KEY (business_id) REFERENCES Business(business_id)
 );
 
-CREATE TABLE IsDescribedBy(
+/* These are like 'tags' to describe the restaurant. */
+CREATE TABLE Categories(
     business_id CHAR(22),
-    restaurant_genre VARCHAR(50),   /* Reasonable Assumption. */
-    PRIMARY KEY (business_id),
+    category_name VARCHAR(80),   /* Reasonable Assumption. */
+    PRIMARY KEY (category_name, business_id),
     FOREIGN KEY (business_id) REFERENCES Business(business_id)
 );
 
-CREATE TABLE GoodForMeal(
+/*
+ * These are any of the boolean attributes that describe a restaurant.
+ * Note that this includes any unnested attributes for a business, such
+ * as "has_wifi": "true".
+ * This also includes nested attributes like ambience: { "hipster": "true" }.
+*/
+CREATE TABLE Attributes(
     business_id CHAR(22),
-    brunch BOOLEAN,
-    breakfast BOOLEAN,
-    dinner BOOLEAN,
-    dessert BOOLEAN,
-    late_night BOOLEAN,
-    lunch BOOLEAN,
-    PRIMARY KEY (business_id),
+    attribute_name VARCHAR(80),   /* Reasonable Assumption. */
+    attribute_value BOOLEAN NOT NULL,
+    PRIMARY KEY (attribute_name, business_id),
     FOREIGN KEY (business_id) REFERENCES Business(business_id)
 );
 
-CREATE TABLE Ambience(
+CREATE TABLE Hours(
     business_id CHAR(22),
-    casual BOOLEAN,
-    romantic BOOLEAN,
-    intimate BOOLEAN,
-    classy BOOLEAN,
-    hipster BOOLEAN,
-    divey BOOLEAN,
-    touristy BOOLEAN,
-    trendy BOOLEAN,
-    upscale BOOLEAN,
-    PRIMARY KEY (business_id),
+    day_open day_of_week,
+    opens_at hour_of_day NOT NULL,
+    closes_at hour_of_day NOT NULL,
+    PRIMARY KEY (day_open, business_id),
     FOREIGN KEY (business_id) REFERENCES Business(business_id)
 );
 
-CREATE TABLE BusinessParking(
+CREATE TABLE Favorite(
     business_id CHAR(22),
-    garage BOOLEAN,
-    street BOOLEAN,
-    validated BOOLEAN,
-    lot BOOLEAN,
-    valet BOOLEAN,
-    PRIMARY KEY (business_id),
-    FOREIGN KEY (business_id) REFERENCES Business(business_id)
-);
-
-CREATE TABLE BestNights(
-    business_id CHAR(22),
-    sunday BOOLEAN,
-    monday BOOLEAN,
-    tuesday BOOLEAN,
-    wednesday BOOLEAN,
-    thursday BOOLEAN,
-    friday BOOLEAN,
-    saturday BOOLEAN,
-    PRIMARY KEY (business_id),
-    FOREIGN KEY (business_id) REFERENCES Business(business_id)
-);
-
-CREATE TABLE Music(
-    business_id CHAR(22),
-    dj BOOLEAN,
-    background_music BOOLEAN,
-    no_music BOOLEAN,
-    karaoke BOOLEAN,
-    live BOOLEAN,
-    video BOOLEAN,
-    jukebox BOOLEAN,
-    PRIMARY KEY (business_id),
-    FOREIGN KEY (business_id) REFERENCES Business(business_id)
+    user_id CHAR(22),
+    PRIMARY KEY (business_id, user_id),
+    FOREIGN KEY (business_id) REFERENCES Business(business_id),
+    FOREIGN KEY (user_id) REFERENCES YelpUser(user_id)
 );
