@@ -8,7 +8,7 @@
  *      for 'alcohol', there are basically 3 possible texts. Could probably optimize.
  */
 
-CREATE TABLE User(
+CREATE TABLE YelpUser(
     user_id CHAR(22),
     average_stars NUMERIC(3, 2),  /* 3 == total sig figs, 2 sig figs to right of decimal point */
     cool INTEGER,
@@ -27,8 +27,8 @@ CREATE TABLE FriendsWith(
     owner_of_friend_list CHAR(22),
     on_friend_list CHAR(22),
     PRIMARY KEY (owner_of_friend_list, on_friend_list),
-    FOREIGN KEY (owner_of_friend_list) REFERENCES User(user_id),
-    FOREIGN KEY (on_friend_list) REFERENCES User(user_id)
+    FOREIGN KEY (owner_of_friend_list) REFERENCES YelpUser(user_id),
+    FOREIGN KEY (on_friend_list) REFERENCES YelpUser(user_id)
 );
 
 CREATE TABLE Business(
@@ -69,7 +69,7 @@ CREATE TABLE Review(
     date_written DATE,
     review_text TEXT,
     PRIMARY KEY (review_id),
-    FOREIGN KEY (user_id) REFERENCES User(user_id),
+    FOREIGN KEY (user_id) REFERENCES YelpUser(user_id),
     FOREIGN KEY (business_id) REFERENCES Business(business_id)
 );
 
