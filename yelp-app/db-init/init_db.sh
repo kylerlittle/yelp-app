@@ -1,5 +1,13 @@
 #!/usr/bin/bash
 
+# Ensure PostgreSQL is installed.
+if [ -x "$(command -v psql)" ]; then
+    echo "Good job. You got PostgreSQL installed."
+else
+    echo "RIP. PostgreSQL is not installed. Please install."; \
+    exit 1
+fi
+
 # Variables
 DB_NAME=CraKeN_YelpDB
 
@@ -7,7 +15,7 @@ DB_NAME=CraKeN_YelpDB
 if [ "$(psql postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname='$USER'")" ]; then
     echo 'Nice work! PostgreSQL role '$USER' exists already';
 else
-    echo 'Creating postgres role '$USER' with superuser permissions'; \
+    echo 'Creating PostgreSQL role '$USER' with superuser permissions'; \
     sudo -u postgres createuser --superuser $USER
 fi
 
