@@ -48,7 +48,7 @@ function parseBusiness() {
         console.log(`postal_code: ${business.postal_code},`);
         console.log(`stars: ${business.stars},`);
         console.log(`review_count: ${business.review_count},`);
-        console.log(`is_open: ${business.is_open},`);
+        console.log(`is_open: ${business.is_open},`);  // Make sure to make this Boolean in INSERT statement
         console.log(`Categories: [${business.categories}],`); // Categories
         
         // Attributes
