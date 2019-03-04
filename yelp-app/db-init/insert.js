@@ -43,12 +43,13 @@ function insertBusiness(line) {
         values: [business.business_id, business.name, business.address, business.state,
             business.city, business.review_count, business.postal_code, is_open],
     };
+
     // execute INSERT
-    pool.query(query)
-    .then(res => insertBusinessCategories(res, business.business_id, business.categories))
-    .then(res => insertBusinessHours(res, business.business_id, business.hours))
-    /* TODO: attributes doesnt match db schema */
-    // .then(res => insertBusinessAttributes(res, business.business_id, business.attributes)) 
+    business_count++;                                                                       
+    pool.query(query)                                                                       // Insert base business fields
+    .then(res => insertBusinessCategories(res, business.business_id, business.categories))  // Insert business categories
+    .then(res => insertBusinessHours(res, business.business_id, business.hours))            // Insert business hours
+    .then(res => insertBusinessAttributes(res, business.business_id, business.attributes))  // Insert business attributes
     .catch(e => console.error(e.stack));
 }
 
@@ -80,7 +81,6 @@ function insertBusinessHours(res, business_id, hours) {
         };
         // execute INSERT
         pool.query(query)
-        //.then(res => console.log(res.rows[0]))
         .catch(e => console.error(err.stack));
     }
     return res;
@@ -100,7 +100,6 @@ function insertBusinessAttributes(res, business_id, attributes) {
             };
             // execute INSERT
             pool.query(query)
-            //.then(res => console.log(res.rows[0]))
             .catch(e => console.error(err.stack));
         }
     }
@@ -118,8 +117,8 @@ function insertUser(line) {
                 user.useful, user.yelping_since],
     };
     // execute INSERT
+    user_count++;
     pool.query(query)
-    //.then(res => console.log('user'))
     .catch(e => console.error(e.stack));
 }
 
@@ -149,6 +148,7 @@ function insertReview(line) {
                 review.useful, review.stars, review.date, review.text],
     };
     // execute INSERT
+    review_count++;
     pool.query(query)
     .catch(e => console.error(e.stack));    
 }
@@ -167,6 +167,7 @@ function insertCheckin(line) {
                 values: [checkin.business_id, dayOfWeek, time_int, checkin.time[dayOfWeek][time]],
             };
             // execute INSERT
+            checkin_count++;
             pool.query(query)
             .catch(e => console.error(e.stack));
         }
@@ -178,7 +179,12 @@ async function executeInsert() {
     await readFileLines('yelp_user.JSON', insertUser, 'Inserting users');
     await readFileLines('yelp_user.JSON', insertFriends, 'Inserting friends');
     await readFileLines('yelp_review.JSON', insertReview, 'Inserting reviews');   
-    readFileLines('yelp_checkin.JSON', insertCheckin, 'Inserting checkins');
+    await readFileLines('yelp_checkin.JSON', insertCheckin, 'Inserting checkins');
+
+    console.log(`Business Count: ${business_count}`);
+    console.log(`User Count: ${user_count}`);
+    console.log(`Review Count: ${review_count}`);
+    console.log(`Checkin Count: ${checkin_count}`);
 }
 
 executeInsert();
