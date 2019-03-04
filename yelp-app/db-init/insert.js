@@ -1,3 +1,5 @@
+/* Insert parsed yelp JSON data into database */
+
 const fs = require('fs');
 const readline = require('readline');
 const LineByLineReader = require('line-by-line');
