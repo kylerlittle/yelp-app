@@ -1,0 +1,15 @@
+{
+  "name": "insert_statements",
+  "version": "1.0.0",
+  "description": "",
+  "main": "insert.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "line-by-line": "^0.1.6",
+    "pg": "^7.8.1"
+  }
+}

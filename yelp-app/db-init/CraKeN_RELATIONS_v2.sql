@@ -37,15 +37,12 @@ CREATE TABLE Business(
     business_address VARCHAR(100),  /* Reasonable assumption. */
     business_city VARCHAR(50),
     business_state VARCHAR(50),
-    alcohol VARCHAR(30),   /* Reasonable assumption. Only a few different types though -- 'none', 'beer_and_wine', etc. */
-    noise_level VARCHAR(30),  /* Same situation as 'alcohol' */
-    price_range NUMERIC(1, 0),
     review_count INTEGER DEFAULT 0,  /* Calculated Field */
-    average_stars NUMERIC(2, 1) DEFAULT 0.0,  /* Calculated Field */
+    review_rating NUMERIC(2, 1) DEFAULT 0.0,  /* Calculated Field */
+    average_stars NUMERIC(2, 1),
     num_checkins INTEGER DEFAULT 0,   /* Calculated Field */
     postal_code NUMERIC(5, 0),  /* 5 digit code. No decimal point. */
     is_open BOOLEAN,   /* This is a 0 or 1 in the JSON, but change in the actual implementation bc that's dumb. Also I guess this is calculated... */
-    restaurants_attire VARCHAR(20),  /* Only a few different types... but whatever. */
     PRIMARY KEY (business_id)
 );
 
@@ -105,15 +102,12 @@ CREATE TABLE Categories(
 );
 
 /*
- * These are any of the boolean attributes that describe a restaurant.
- * Note that this includes any unnested attributes for a business, such
- * as "has_wifi": "true".
- * This also includes nested attributes like ambience: { "hipster": "true" }.
+ * Includes every business attribute
 */
 CREATE TABLE Attributes(
     business_id CHAR(22),
     attribute_name VARCHAR(80),   /* Reasonable Assumption. */
-    attribute_value BOOLEAN NOT NULL,
+    attribute_value VARCHAR(80),   /* Reasonable Assumption. */
     PRIMARY KEY (attribute_name, business_id),
     FOREIGN KEY (business_id) REFERENCES Business(business_id)
 );

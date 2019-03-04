@@ -27,4 +27,4 @@ sudo -u postgres createdb $DB_NAME
 psql -U $USER -d $DB_NAME -a -f CraKeN_RELATIONS_v2.sql
 
 # Insert data.
-echo "TODO -- insert data"
+node insert.js 
