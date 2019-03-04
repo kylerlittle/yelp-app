@@ -1,5 +1,6 @@
 const fs = require('fs');
 const readline = require('readline');
+const LineByLineReader = require('line-by-line');
 const Pool = require('pg').Pool;
 
 // Connect to database
@@ -13,20 +14,18 @@ const pool = new Pool({
 
 var business_count = 0, user_count = 0, review_count = 0,  checkin_count = 0;
 
-function readFileLines(file, func) {
-    console.log(file);
-    const rl = readline.createInterface({
-        input: fs.createReadStream(file)
-    });
-    
+function readFileLines(file, func, title) {
+    const lr = new LineByLineReader(file);
+    console.log(title);
+
     return new Promise(function(resolve, reject){
-        rl.on('line', (line) => {
+        lr.on('line', function (line) {
             if(line.length < 2) {
                 return; // don't parse a blank line
             }
             func(line);
         });
-        rl.on('close', () => resolve())
+        lr.on('end', () => resolve())
         .on('error', reject);
     });
 }
@@ -175,13 +174,11 @@ function insertCheckin(line) {
 }
 
 async function executeInsert() {
-    await readFileLines('yelp_business.JSON', insertBusiness);
-    await readFileLines('yelp_user.JSON', insertUser);
-    await readFileLines('yelp_review.JSON', insertReview);   
-    readFileLines('yelp_checkin.JSON', insertCheckin);
-        
-    /* Parsing too many files causes memory heap limit */
-    //readFileLines('yelp_user.JSON', insertFriends);
+    await readFileLines('yelp_business.JSON', insertBusiness, 'Inserting businesses');
+    await readFileLines('yelp_user.JSON', insertUser, 'Inserting users');
+    await readFileLines('yelp_user.JSON', insertFriends, 'Inserting friends');
+    await readFileLines('yelp_review.JSON', insertReview, 'Inserting reviews');   
+    readFileLines('yelp_checkin.JSON', insertCheckin, 'Inserting checkins');
 }
 
 executeInsert();
