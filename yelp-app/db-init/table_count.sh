@@ -1,14 +1,21 @@
+#!/bin/bash
+
 # Declare output file.
 OUTPUTFILE=CraKeN_TableSizes.txt
 
-# Ugly hack is ugly :'(
-REGEX='((.+)\|)((.+)\|)((.+)\|\w)'
+# Set password
+export PGPASSWORD='12345';
+
+# Truncate file
+echo -n "" > $OUTPUTFILE
 
 psql CraKeN_YelpDB -tAc "\dt" | \
 while read i
 do
-    if [[ $i =~ $REGEX ]]; then
-        psql CraKeN_YelpDB -tAc "SELECT COUNT(*) FROM ${BASH_REMATCH[4]}" >> $OUTPUTFILE
+    match=`echo $i | perl -nle 'print $1 if m{.+\|\K(.+)(?=\|.+\|\w)}'`
+    if [[ match ]]; then
+        echo -n "$match table size: " >> $OUTPUTFILE
+        psql CraKeN_YelpDB -tAc "SELECT COUNT(*) FROM $match" >> $OUTPUTFILE
     else
         echo "$i doesn't match"
     fi

@@ -1,9 +1,9 @@
-0
-0
-0
-0
-0
-0
-0
-0
-0
+attributes table size: 104971
+business table size: 11481
+categories table size: 33619
+checkin table size: 481360
+favorite table size: 0
+friendswith table size: 882086
+hours table size: 55502
+review table size: 416479
+yelpuser table size: 192999
