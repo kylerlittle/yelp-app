@@ -22,9 +22,11 @@ app.use(
 
 /**
  * Routes:
- *      GET -- /api/business        |   displayBusinesses()
+ *      GET -- /api/business?state={}&city={}&zipcode={}&business={}
+ *      GET -- /api/states
  */
 app.get('/api/business', db.displayBusinesses);
+app.get('/api/states', db.displayDistinctStates);
 
 /**
  * List on port specified at top of file.
