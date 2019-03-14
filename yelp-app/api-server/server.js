@@ -22,11 +22,19 @@ app.use(
 
 /**
  * Routes:
- *      GET -- /api/business?state={}&city={}&zipcode={}&business={}
+ *      GET -- /api/businesses
+ *          ==> accepts query parameters: state={}, city={}, zipcode={}, categories={,} (comma-separated)
  *      GET -- /api/states
+ *      GET -- /api/states/:state/cities
+ *      GET -- /api/states/:state/cities/:city/zipcodes
+ *      GET -- /api/reviews/:businessID
+ *      GET -- /api/categories
+ *      POST -- /api/reviews/:businessID
+ *         ==> Body of form {review_text: "", stars_given: 5}
+ *         ==> Unique review_id should be generated
  */
-app.get('/api/business', db.displayBusinesses);
-app.get('/api/states', db.displayDistinctStates);
+app.get('/api/businesses', db.getBusinesses);
+app.get('/api/states', db.getDistinctStates);
 
 /**
  * List on port specified at top of file.
