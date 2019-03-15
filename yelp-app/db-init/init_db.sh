@@ -20,7 +20,7 @@ else
 fi
 
 # Drop db if exists... Then create db.
-sudo -u postgres dropdb CraKeN_YelpDB
+sudo -u postgres dropdb $DB_NAME
 sudo -u postgres createdb $DB_NAME
 
 # Create tables.

@@ -10,3 +10,9 @@ node_modules/
 
 # Optional npm cache directory
 .npm
+
+# Yelp data
+yelp_*.json
+
+# iCloud files
+*.icloud
