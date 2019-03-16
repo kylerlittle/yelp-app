@@ -2,6 +2,9 @@ import React, { Component } from 'react';
 import FilterSelector from './FilterSelector';
 import FilterSelectorChoices from './FilterSelectorChoices';
 import Client from './Client';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
+import Container from 'react-bootstrap/Container';
 
 class QueryBuilder extends Component {
   constructor(props) {
@@ -35,10 +38,15 @@ class QueryBuilder extends Component {
   }
   render() {
     return (
-        <div className="queryBuilder">
+        <Container fluid={true}>
+        <Row>
+            <Col>
             <FilterSelector handleSelect={this.fillFilterSelectorChoices.bind(this)} />
             <FilterSelectorChoices selectedCategoryList={this.state.selectedCategoryList} />
-        </div>
+            </Col>
+            <Col>Second Column</Col>
+        </Row>
+        </Container>
     );
   }
 }
