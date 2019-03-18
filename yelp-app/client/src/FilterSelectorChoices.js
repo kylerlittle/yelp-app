@@ -5,7 +5,9 @@ import './FilterSelectorChoices.css';
 class FilterSelectorChoices extends Component {
   render() {
     const formattedList = this.props.selectedCategoryList.map((choice) =>
-        <Choice>{choice}</Choice>
+        <Choice handleClick={this.props.handleClick}>
+            {choice}
+        </Choice>
     );
     return (
       <div>
