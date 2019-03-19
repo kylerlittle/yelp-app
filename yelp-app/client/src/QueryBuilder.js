@@ -91,6 +91,7 @@ class QueryBuilder extends Component {
         };
      */
     const query = {
+        ...this.state.selectedQueryAttributes,
         state: selectedAttribute,
     };
     var actualBusinessList = [];

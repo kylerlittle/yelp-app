@@ -10,6 +10,8 @@
  * Add function to export of Client object at bottom of file.
  */
 
+ import queryString from 'query-string';
+
 function getBusinessStates(callback) {
   return fetch(`/api/states`, {
     accept: "application/json"
@@ -20,14 +22,19 @@ function getBusinessStates(callback) {
 }
 
 function searchBusinesses(query, callback) {
-  const q = query;  // alias
   /**
-   * const queryString = require('query-string');
-   * var stringified = queryString.stringify(query)
-   * // ensure empty set and empty string handled appropriately
-   * return fetch(`api/business?${stringified}`, ...)
+   * Convert any falsy values (or empty set) to undefined so stringify handles
+   * it correctly.
    */
-  return fetch(`api/business?state=${q.state}`, {
+  const modifiedQuery = { ...query };
+  for (let key in query) {
+    if (!query[key] || (query[key] instanceof Set && query[key].size <= 0)) {
+      modifiedQuery[key] = undefined;
+    }
+  }
+  const stringified = queryString.stringify(modifiedQuery)
+
+  return fetch(`api/businesses?${stringified}`, {
     accept: "application/json"
   })
   .then(checkStatus)
