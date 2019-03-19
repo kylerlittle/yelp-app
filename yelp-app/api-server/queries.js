@@ -26,6 +26,7 @@ const crypto = require("crypto");
  *          ==> Body of form {categories: ["...", "...", etc]}
  *      GET -- /api/states
  *      GET -- /api/states/:state/cities
+ *          ==> state='all' returns all cities
  *      GET -- /api/states/:state/cities/:city/zipcodes
  *      GET -- /api/reviews/:businessID
  *      GET -- /api/states/:state/cities/:city/zipcodes/:zipcode/categories
@@ -84,9 +85,21 @@ const getDistinctStates = (request, response) => {
 
 const getCities = (request, response) => {
   const business_state = request.params.state;
-  const query = {
-    text: 'SELECT DISTINCT business_city FROM business WHERE business_state=$1 ORDER BY business_city',
-    values: [business_state],
+  let query;
+
+  // Return all cities
+  if (business_state === "all"){
+    query = {
+      text: 'SELECT DISTINCT business_city FROM business ORDER BY business_city',
+      values: [],
+    }
+  }
+  // Return cities for only a single state
+  else{
+    query = {
+      text: 'SELECT DISTINCT business_city FROM business WHERE business_state=$1 ORDER BY business_city',
+      values: [business_state],
+    }
   }
   pool.query(query, (error, results) => {
     if (error) {

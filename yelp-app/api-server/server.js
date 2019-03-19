@@ -27,6 +27,7 @@ app.use(
  *          ==> Body of form {categories: ["...", "...", etc]}
  *      GET -- /api/states
  *      GET -- /api/states/:state/cities
+ *          ==> state='all' returns all cities
  *      GET -- /api/states/:state/cities/:city/zipcodes
  *      GET -- /api/reviews/:businessID
  *      GET -- /api/states/:state/cities/:city/zipcodes/:zipcode/categories
