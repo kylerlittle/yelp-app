@@ -14,7 +14,12 @@ class QueryBuilder extends Component {
     this.state = {
         selectedCategory: '',
         selectedCategoryList: [],
-        selectedQueryAttributes: [],
+        selectedQueryAttributes: {
+            state: '',
+            city: '',
+            zipcode: '',
+            categories: new Set(),
+        },
         matchingBusinesses: [],
     }
   }
@@ -79,10 +84,20 @@ class QueryBuilder extends Component {
      */
 
     const selectedAttribute = e.target.innerHTML;
+    /**
+     *  const query = {
+            this.state.selectedQueryAttributes,
+            state: selectedAttribute
+        };
+     */
     const query = {
         state: selectedAttribute,
     };
     var actualBusinessList = [];
+    var newSelectedQueryAttributes = {
+        ...this.state.selectedQueryAttributes
+    };
+    newSelectedQueryAttributes[this.state.selectedCategory] = selectedAttribute;
 
     Client.searchBusinesses(query, (businesses) => {
         businesses.forEach(element => {
@@ -90,7 +105,7 @@ class QueryBuilder extends Component {
         })
         this.setState({
             ...this.state,
-            selectedQueryAttributes: this.state.selectedQueryAttributes.concat([selectedAttribute]),
+            selectedQueryAttributes: newSelectedQueryAttributes,
             matchingBusinesses: actualBusinessList,
         })
     })

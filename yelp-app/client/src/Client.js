@@ -21,7 +21,13 @@ function getBusinessStates(callback) {
 
 function searchBusinesses(query, callback) {
   const q = query;  // alias
-  return fetch(`api/business?state=${q.state}&city=${q.city}&zipcode=${q.zipcode}&business=${q.business}`, {
+  /**
+   * const queryString = require('query-string');
+   * var stringified = queryString.stringify(query)
+   * // ensure empty set and empty string handled appropriately
+   * return fetch(`api/business?${stringified}`, ...)
+   */
+  return fetch(`api/business?state=${q.state}`, {
     accept: "application/json"
   })
   .then(checkStatus)
@@ -41,8 +47,6 @@ function checkStatus(response) {
 }
   
 function parseJSON(response) {
-  let clone = response.clone();
-  console.log(clone.json());
   return response.json();
 }
   
