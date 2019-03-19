@@ -15,6 +15,11 @@ const pool = new Pool({
 });
 
 /**
+ * Generate random strings. 
+ */
+const crypto = require("crypto");
+
+/**
  * Routes:
  *      GET -- /api/businesses
  *          ==> accepts query parameters: state={}, city={}, zipcode={} 
@@ -141,24 +146,24 @@ const getCategories = (request, response) => {
 }
 
 const postReview = (request, response) => {
-  console.log(request.body);
   const business_id = request.params.businessID, user_id = request.body.user_id,
     review_text = request.body.review_text, stars_given = request.body.stars_given;
   const date = new Date().toISOString().split("T")[0];
-
-  // TODO: generate unique review_id
-  const review_id = ""; 
+  const review_id = crypto.randomBytes(11).toString('hex');
+  console.log(`review_id: ${review_id}`);
 
   const query = {
-    text: 'INSERT INTO review (user_id, business_id, review_text, stars_given, date_written) \
-      VALUES ($1, $2, $3, $4, $5)',
-    values: [user_id, business_id, review_text, stars_given, date],
+    text: 'INSERT INTO review (review_id, user_id, business_id, review_text, stars_given, date_written) \
+      VALUES ($1, $2, $3, $4, $5, $6)',
+    values: [review_id, user_id, business_id, review_text, stars_given, date],
   }
   pool.query(query, (error, results) => {
     if (error) {
       throw error
     }
-    response.status(200).json({status: "Review inserted successfully"});
+    else{
+      response.status(200).json({status: "Review inserted successfully"});
+    }
   })
 }
 
