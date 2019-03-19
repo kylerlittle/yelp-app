@@ -23,14 +23,15 @@ app.use(
 /**
  * Routes:
  *      GET -- /api/businesses
- *          ==> accepts query parameters: state={}, city={}, zipcode={}, categories={,} (comma-separated)
+ *          ==> accepts query parameters: state={}, city={}, zipcode={} 
+ *          ==> Body of form {categories: ["...", "...", etc]}
  *      GET -- /api/states
  *      GET -- /api/states/:state/cities
  *      GET -- /api/states/:state/cities/:city/zipcodes
  *      GET -- /api/reviews/:businessID
  *      GET -- /api/states/:state/cities/:city/zipcodes/:zipcode/categories
  *      POST -- /api/reviews/:businessID
- *         ==> Body of form {review_text: "", stars_given: 5}
+ *         ==> Body of form {user_id: "...", review_text: "", stars_given: 5}
  *         ==> Unique review_id should be generated
  */
 app.get('/api/businesses', db.getBusinesses);

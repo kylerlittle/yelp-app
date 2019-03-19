@@ -17,7 +17,8 @@ const pool = new Pool({
 /**
  * Routes:
  *      GET -- /api/businesses
- *          ==> accepts query parameters: state={}, city={}, zipcode={}, categories={,} (comma-separated)
+ *          ==> accepts query parameters: state={}, city={}, zipcode={} 
+ *          ==> Body of form {categories: ["...", "...", etc]}
  *      GET -- /api/states
  *      GET -- /api/states/:state/cities
  *      GET -- /api/states/:state/cities/:city/zipcodes
@@ -30,21 +31,34 @@ const pool = new Pool({
 
 const getBusinesses = (request, response) => {
   const business_state = request.query['state'], business_city = request.query['city'], 
-    zipcode = request.query['zipcode'];
+    zipcode = request.query['zipcode'], categories = request.body.categories;
+  let query_portion = "";
+  let query_vals = [business_state, business_city, zipcode];
+
+  // Build filter-by-category portion of query
+  for (i = 0, val = 4, tok = ""; i < categories.length; i++, val++){
+    query_portion += `${tok}categories.category_name=$${val}`;
+    tok = " or ";
+    query_vals.push(categories[i]);
+  }
+  query_portion = `(${query_portion})`;
+
   const query = {
-    text: 'SELECT DISTINCT business.business_id, business_name, business_address, business_city, business_state FROM business, categories \
+    text: `SELECT DISTINCT business.business_id, business_name, business_address, business_city, business_state \
+      FROM business, categories \
       WHERE business.business_id=categories.business_id and \
-      (business_state=$1 or $1 is null) and \
-      (business_city=$2 or $2 is null) and \
-      (postal_code=$3 or $3 is null) \
-      ORDER BY business_name',
-    values: [business_state, business_city, zipcode],
+        (business_state=$1 or $1 is null) and \
+        (business_city=$2 or $2 is null) and \
+        (postal_code=$3 or $3 is null) and \
+        ${query_portion} \
+      GROUP BY business.business_id, business_name, business_address, business_city, business_state \
+      HAVING COUNT (*) >= ${categories.length} \
+      ORDER BY business_name`,
+    values: query_vals,
   }
-  // Get query params, if any.
-  console.log(request.query);
-  for (const key in request.query) {
-    console.log(request.query[key])
-  }
+  
+  console.log(query_portion);
+  console.log(query_vals);
 
   pool.query(query, (error, results) => {
     if (error) {
@@ -136,9 +150,9 @@ const postReview = (request, response) => {
   const review_id = ""; 
 
   const query = {
-    text: 'INSERT INTO review (review_id, user_id, business_id, review_text, stars_given, date_written) \
-      VALUES ($1, $2, $3, $4, $5, $6)',
-    values: [review_id, user_id, business_id, review_text, stars_given, date],
+    text: 'INSERT INTO review (user_id, business_id, review_text, stars_given, date_written) \
+      VALUES ($1, $2, $3, $4, $5)',
+    values: [user_id, business_id, review_text, stars_given, date],
   }
   pool.query(query, (error, results) => {
     if (error) {
