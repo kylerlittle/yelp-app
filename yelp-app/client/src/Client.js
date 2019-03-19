@@ -21,6 +21,33 @@ function getBusinessStates(callback) {
   .then(callback);
 }
 
+function getBusinessCities(state, callback) {
+  return fetch(`/api/states/${state}/cities`, {
+    accept: "application/json"
+  })
+  .then(checkStatus)
+  .then(parseJSON)
+  .then(callback);
+}
+
+function getBusinessZIPCodes(state, city, callback) {
+  return fetch(`/api/states/${state}/cities/${city}/zipcodes`, {
+    accept: "application/json"
+  })
+  .then(checkStatus)
+  .then(parseJSON)
+  .then(callback);
+}
+
+function getBusinessCategories(state, city, zipcode, callback) {
+  return fetch(`/api/states/${state}/cities/${city}/zipcodes/${zipcode}/categories`, {
+    accept: "application/json"
+  })
+  .then(checkStatus)
+  .then(parseJSON)
+  .then(callback);
+}
+
 function searchBusinesses(query, callback) {
   /**
    * Convert any falsy values (or empty set) to undefined so stringify handles
@@ -32,7 +59,7 @@ function searchBusinesses(query, callback) {
       modifiedQuery[key] = undefined;
     }
   }
-  const stringified = queryString.stringify(modifiedQuery)
+  const stringified = queryString.stringify(modifiedQuery, {arrayFormat: 'comma'})
 
   return fetch(`api/businesses?${stringified}`, {
     accept: "application/json"
@@ -57,5 +84,11 @@ function parseJSON(response) {
   return response.json();
 }
   
-  const Client = { searchBusinesses, getBusinessStates };
+  const Client = {
+    searchBusinesses,
+    getBusinessStates,
+    getBusinessCities,
+    getBusinessZIPCodes,
+    getBusinessCategories,
+  };
   export default Client;
