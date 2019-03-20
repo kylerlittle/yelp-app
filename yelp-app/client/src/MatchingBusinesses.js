@@ -1,9 +1,13 @@
 import React, { Component } from 'react';
+import Choice from './Choice';
+import './MatchingBusinesses.css'
 
 class MatchingBusinesses extends Component {
   render() {
     const formattedList = this.props.matchingBusinesses.map((business) =>
-        <li>{business}</li>
+        <Choice handleClick={this.props.handleClick}>
+        {business['name']}
+        </Choice>
     );
     return (
         <ul className="MatchingBusinessesList">{formattedList}</ul>
