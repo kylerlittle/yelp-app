@@ -48,6 +48,15 @@ function getBusinessCategories(state, city, zipcode, callback) {
   .then(callback);
 }
 
+function getSelectedBusinessReviews(id, callback) {
+  return fetch(`/api/reviews/${id}`, {
+    accept: "application/json"
+  })
+  .then(checkStatus)
+  .then(parseJSON)
+  .then(callback);
+}
+
 function searchBusinesses(query, callback) {
   /**
    * Convert any falsy values (or empty array -- which is truthy) to undefined so stringify handles
@@ -92,5 +101,6 @@ function parseJSON(response) {
     getBusinessCities,
     getBusinessZIPCodes,
     getBusinessCategories,
+    getSelectedBusinessReviews,
   };
   export default Client;

@@ -4,6 +4,7 @@ import FilterSelectorChoices from './FilterSelectorChoices';
 import Client from './Client';
 import QueryBox from './QueryBox';
 import MatchingBusinesses from './MatchingBusinesses';
+import SelectedBusinessReviews from './SelectedBusinessReviews';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Container from 'react-bootstrap/Container';
@@ -21,6 +22,8 @@ class QueryBuilder extends Component {
             categories: [],
         },
         matchingBusinesses: [],
+        selectedBusiness: '',
+        selectedBusinessReviews: [],
     }
   }
 
@@ -150,7 +153,7 @@ class QueryBuilder extends Component {
 
     Client.searchBusinesses(newSelectedQueryAttributes, (businesses) => {
         businesses.forEach(element => {
-            actualBusinessList.push(element['business_name'])
+            actualBusinessList.push({'name': element['business_name'], 'id': element['business_id']})
         });
         this.setState({
             ...this.state,
@@ -165,6 +168,34 @@ class QueryBuilder extends Component {
    * > TODO
    *    handleRemoveQueryAttribute -- handle removal from QueryBox
    */
+
+  handleSelectBusiness(e) {
+    /**
+     * Event 'e' is click on item in selectedCategoryList
+     * Update selectedBusiness and selectedBusinessReviews.
+     */
+
+    const selectedBusiness = e.target.innerHTML;
+    console.log(`selectedBusiness: ${selectedBusiness}`);
+    var actualSelectedBusinessReviews = [];
+
+    // First, find the selectedBusiness's id
+    var found = this.state.matchingBusinesses.find((b) => b['name'] === selectedBusiness.replace(/&amp;/g, '&'));
+    console.log(found)
+
+    Client.getSelectedBusinessReviews(found['id'], (reviews) => {
+        reviews.forEach(element => {
+            actualSelectedBusinessReviews.push(element)
+        });
+        this.setState({
+            ...this.state,
+            selectedBusiness: found,
+            selectedBusinessReviews: actualSelectedBusinessReviews,
+        });
+    })
+
+    console.log(this.state)
+  }
 
   render() {
     return (
@@ -183,6 +214,11 @@ class QueryBuilder extends Component {
                     Matching Businesses
                 </h5>
             </Col>
+            <Col>
+                <h5>
+                    {`${(this.state.selectedBusiness) ? this.state.selectedBusiness['name'] : ''} Reviews`}
+                </h5>
+            </Col>
         </Row>
         <Row>
             <Col>
@@ -195,7 +231,13 @@ class QueryBuilder extends Component {
                 <QueryBox selectedQueryAttributes={this.state.selectedQueryAttributes} />
             </Col>
             <Col>
-                <MatchingBusinesses matchingBusinesses={this.state.matchingBusinesses} />
+                <MatchingBusinesses
+                    matchingBusinesses={this.state.matchingBusinesses}
+                    handleClick={this.handleSelectBusiness.bind(this)}
+                />
+            </Col>
+            <Col>
+                <SelectedBusinessReviews reviewList={this.state.selectedBusinessReviews}/>
             </Col>
         </Row>
         </Container>
