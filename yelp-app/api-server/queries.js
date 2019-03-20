@@ -37,34 +37,41 @@ const crypto = require("crypto");
 
 const getBusinesses = (request, response) => {
   const business_state = request.query['state'], business_city = request.query['city'], 
-    zipcode = request.query['zipcode'], categories = request.body.categories;
+    zipcode = request.query['zipcode'];
+  var categories;
+
+  if (request.query['categories']) {
+    // Elements are comma-separated
+    categories = request.query['categories'].split(',');
+    // Replace any '&amp;' with an '&'
+    categories = categories.map((element) => element.replace(/&amp;/g, '&'));
+  }
+  
   let query_portion = "";
-  let query_vals = [business_state, business_city, zipcode];
 
   // Build filter-by-category portion of query
-  for (i = 0, val = 4, tok = ""; i < categories.length; i++, val++){
-    query_portion += `${tok}categories.category_name=$${val}`;
-    tok = " or ";
-    query_vals.push(categories[i]);
+  if (categories instanceof Array) {
+
+    for (i = 0, tok = ""; i < categories.length; i++){
+      query_portion += `${tok}lower(categories.category_name)=lower(\'${categories[i]}\')`;
+      tok = " or ";
+    }
+    query_portion = `(${query_portion})`;
   }
-  query_portion = `(${query_portion})`;
 
   const query = {
     text: `SELECT DISTINCT business.business_id, business_name, business_address, business_city, business_state \
       FROM business, categories \
-      WHERE business.business_id=categories.business_id and \
-        (business_state=$1 or $1 is null) and \
-        (business_city=$2 or $2 is null) and \
-        (postal_code=$3 or $3 is null) and \
-        ${query_portion} \
-      GROUP BY business.business_id, business_name, business_address, business_city, business_state \
-      HAVING COUNT (*) >= ${categories.length} \
-      ORDER BY business_name`,
-    values: query_vals,
+      WHERE business.business_id=categories.business_id\
+        ${(business_state) ? ' and business_state=UPPER(\'' + business_state + '\')' : ''}\
+        ${(business_city) ? ' and business_city=\'' + business_city + '\'' : ''}\
+        ${(zipcode) ? ' and postal_code=' + zipcode : ''}\
+        ${(query_portion) ? ' and ' + query_portion + ' GROUP BY business.business_id, business_name, business_address, business_city, business_state \
+        HAVING COUNT (*) >= ' + categories.length: ''}\
+        ORDER BY business_name`,
   }
-  
-  console.log(query_portion);
-  console.log(query_vals);
+
+  console.log(query);
 
   pool.query(query, (error, results) => {
     if (error) {
