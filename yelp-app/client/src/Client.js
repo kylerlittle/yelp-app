@@ -50,16 +50,18 @@ function getBusinessCategories(state, city, zipcode, callback) {
 
 function searchBusinesses(query, callback) {
   /**
-   * Convert any falsy values (or empty set) to undefined so stringify handles
+   * Convert any falsy values (or empty array -- which is truthy) to undefined so stringify handles
    * it correctly.
    */
   const modifiedQuery = { ...query };
   for (let key in query) {
-    if (!query[key] || (query[key] instanceof Set && query[key].size <= 0)) {
+    if ((query[key] instanceof Array && query[key].length < 1) || !query[key]) {
       modifiedQuery[key] = undefined;
     }
   }
+  console.log(modifiedQuery);
   const stringified = queryString.stringify(modifiedQuery, {arrayFormat: 'comma'})
+  console.log(stringified);
 
   return fetch(`api/businesses?${stringified}`, {
     accept: "application/json"
