@@ -12,6 +12,7 @@ const pool = new Pool({
   database: 'CraKeN_YelpDB',
   password: '12345',
   port: 5432,
+  max: 100,
 });
 
 var business_count = 0, user_count = 0, review_count = 0,  checkin_count = 0;
@@ -19,13 +20,15 @@ var business_count = 0, user_count = 0, review_count = 0,  checkin_count = 0;
 function readFileLines(file, func, title) {
     const lr = new LineByLineReader(file);
     console.log(title);
-
+    
     return new Promise(function(resolve, reject){
         lr.on('line', function (line) {
+            
             if(line.length < 2) {
                 return; // don't parse a blank line
             }
             func(line);
+
         });
         lr.on('end', () => resolve())
         .on('error', reject);
@@ -64,7 +67,7 @@ function insertBusinessCategories(res, business_id, categories) {
         };
         // execute INSERT
         pool.query(query)
-        .catch(e => console.error(err.stack));
+        .catch(e => console.error(e.stack));
     }
     return res;
 }
@@ -83,7 +86,7 @@ function insertBusinessHours(res, business_id, hours) {
         };
         // execute INSERT
         pool.query(query)
-        .catch(e => console.error(err.stack));
+        .catch(e => console.error(e.stack));
     }
     return res;
 }
@@ -102,7 +105,7 @@ function insertBusinessAttributes(res, business_id, attributes) {
             };
             // execute INSERT
             pool.query(query)
-            .catch(e => console.error(err.stack));
+            .catch(e => console.error(e.stack));
         }
     }
     return res;
@@ -152,7 +155,7 @@ function insertReview(line) {
     // execute INSERT
     review_count++;
     pool.query(query)
-    .catch(e => console.error(e.stack));    
+    .catch(e => console.error(e.stack));
 }
 
 function insertCheckin(line) { 
