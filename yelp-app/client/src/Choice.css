@@ -1,0 +1,12 @@
+.Choice {
+    border-radius: 10px;
+    background-color: #ffffff;
+    border-color: black;
+    border-style: solid;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    margin-top: 5px;
+    position: relative;
+    margin-right: 10px;
+    margin-left: 10px;
+}
