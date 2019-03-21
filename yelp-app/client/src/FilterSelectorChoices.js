@@ -10,9 +10,7 @@ class FilterSelectorChoices extends Component {
         </Choice>
     );
     return (
-      <div>
         <ul className="FilterSelectorChoiceList">{formattedList}</ul>
-      </div>
     );
   }
 }

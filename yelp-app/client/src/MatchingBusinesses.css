@@ -1,3 +1,4 @@
 .MatchingBusinessesList {
     list-style-type: none;
+    display: inline;
 }

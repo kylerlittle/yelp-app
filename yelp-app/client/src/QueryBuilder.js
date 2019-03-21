@@ -138,7 +138,7 @@ class QueryBuilder extends Component {
      * Update selectedQueryAttributes and matchingBusinesses in state.
      */
 
-    const selectedAttribute = e.target.innerHTML;
+    const selectedAttribute = e.target.innerText;
     var actualBusinessList = [];
 
     var newSelectedQueryAttributes = {
@@ -177,7 +177,7 @@ class QueryBuilder extends Component {
      * Initially, open write review menu for speed.
      * Update selectedBusiness and selectedBusinessReviews.
      */
-    const selectedBusiness = e.target.innerHTML;
+    const selectedBusiness = e.target.innerText;
     console.log(`selectedBusiness: ${selectedBusiness}`);
     var actualSelectedBusinessReviews = [];
 
@@ -245,42 +245,42 @@ class QueryBuilder extends Component {
             handleSubmit={this.handleSubmitReview.bind(this)}
         />
         <Row>
-            <Col>
+            <Col lg={3}>
                 <FilterSelector handleSelect={this.fillFilterSelectorChoices.bind(this)} />
             </Col>
-            <Col>
+            <Col lg={3}>
                 <h5>
                     Query Box
                 </h5>
             </Col>
-            <Col>
+            <Col lg={3}>
                 <h5>
                     Matching Businesses
                 </h5>
             </Col>
-            <Col>
+            <Col lg={3}>
                 <h5>
                     {`${(this.state.selectedBusiness) ? this.state.selectedBusiness['name'] : ''} Reviews`}
                 </h5>
             </Col>
         </Row>
         <Row>
-            <Col>
+            <Col lg={3}>
                 <FilterSelectorChoices
                     selectedCategoryList={this.state.selectedCategoryList}
                     handleClick={this.handleSelectQueryAttribute.bind(this)}
                 />
             </Col>
-            <Col>
+            <Col lg={3}>
                 <QueryBox selectedQueryAttributes={this.state.selectedQueryAttributes} />
             </Col>
-            <Col>
+            <Col lg={3}>
                 <MatchingBusinesses
                     matchingBusinesses={this.state.matchingBusinesses}
                     handleClick={this.handleSelectBusiness.bind(this)}
                 />
             </Col>
-            <Col>
+            <Col lg={3}>
                 <SelectedBusinessReviews reviewList={this.state.selectedBusinessReviews}/>
             </Col>
         </Row>
