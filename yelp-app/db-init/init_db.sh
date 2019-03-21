@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/sh
 
 # Ensure PostgreSQL is installed.
 if [ -x "$(command -v psql)" ]; then
@@ -26,5 +26,11 @@ sudo -u postgres createdb $DB_NAME
 # Create tables.
 psql -U $USER -d $DB_NAME -a -f CraKeN_RELATIONS_v2.sql
 
+# If we add the triggers before we start inserting, calculated fields should be correct when insert is finished
+psql -U $USER -d $DB_NAME -a -f CraKeN_TRIGGERS.sql
+
+
 # Insert data.
 node insert.js 
+
+
