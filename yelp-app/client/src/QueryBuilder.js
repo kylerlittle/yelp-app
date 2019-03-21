@@ -5,6 +5,7 @@ import Client from './Client';
 import QueryBox from './QueryBox';
 import MatchingBusinesses from './MatchingBusinesses';
 import SelectedBusinessReviews from './SelectedBusinessReviews';
+import CreateReview from './CreateReview';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Container from 'react-bootstrap/Container';
@@ -24,6 +25,7 @@ class QueryBuilder extends Component {
         matchingBusinesses: [],
         selectedBusiness: '',
         selectedBusinessReviews: [],
+        reviewFormModalShow: false,
     }
   }
 
@@ -172,9 +174,9 @@ class QueryBuilder extends Component {
   handleSelectBusiness(e) {
     /**
      * Event 'e' is click on item in selectedCategoryList
+     * Initially, open write review menu for speed.
      * Update selectedBusiness and selectedBusinessReviews.
      */
-
     const selectedBusiness = e.target.innerHTML;
     console.log(`selectedBusiness: ${selectedBusiness}`);
     var actualSelectedBusinessReviews = [];
@@ -183,13 +185,18 @@ class QueryBuilder extends Component {
     var found = this.state.matchingBusinesses.find((b) => b['name'] === selectedBusiness.replace(/&amp;/g, '&'));
     console.log(found)
 
+    this.setState({
+        ...this.state,
+        reviewFormModalShow: true,
+        selectedBusiness: found,
+    });
+
     Client.getSelectedBusinessReviews(found['id'], (reviews) => {
         reviews.forEach(element => {
             actualSelectedBusinessReviews.push(element)
         });
         this.setState({
             ...this.state,
-            selectedBusiness: found,
             selectedBusinessReviews: actualSelectedBusinessReviews,
         });
     })
@@ -197,9 +204,46 @@ class QueryBuilder extends Component {
     console.log(this.state)
   }
 
+  reviewFormModalClose() {
+    this.setState({
+        ...this.state,
+        reviewFormModalShow: false,
+    })
+  }
+
+  handleSubmitReview(review_info) {
+    var businessReviews = [];
+
+    Client.postReview(this.state.selectedBusiness['id'], review_info,
+        (ignoreResponse) => {
+            // Quickly, close modal window.
+            this.setState({
+                ...this.state,
+                reviewFormModalShow: false,
+            })
+            // Now, since review is new, update!
+            Client.getSelectedBusinessReviews(this.state.selectedBusiness['id'], (reviews) => {
+                reviews.forEach(element => {
+                    businessReviews.push(element)
+                });
+                this.setState({
+                    ...this.state,
+                    selectedBusinessReviews: businessReviews,
+                });
+            })
+        }
+    );
+  }
+
   render() {
     return (
         <Container fluid={true}>
+        <CreateReview
+            show={this.state.reviewFormModalShow}
+            onHide={this.reviewFormModalClose.bind(this)}
+            businessName={this.state.selectedBusiness['name']}
+            handleSubmit={this.handleSubmitReview.bind(this)}
+        />
         <Row>
             <Col>
                 <FilterSelector handleSelect={this.fillFilterSelectorChoices.bind(this)} />
