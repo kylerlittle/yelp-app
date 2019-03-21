@@ -79,6 +79,19 @@ function searchBusinesses(query, callback) {
   .then(parseJSON)
   .then(callback);
 }
+
+function postReview(businessID, review_info, callback) {
+  return fetch(`api/reviews/${businessID}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(review_info),
+  })
+  .then(checkStatus)
+  .then(parseJSON)
+  .then(callback)
+}
   
 function checkStatus(response) {
   if (response.status >= 200 && response.status < 300) {
@@ -95,12 +108,13 @@ function parseJSON(response) {
   return response.json();
 }
   
-  const Client = {
-    searchBusinesses,
-    getBusinessStates,
-    getBusinessCities,
-    getBusinessZIPCodes,
-    getBusinessCategories,
-    getSelectedBusinessReviews,
-  };
-  export default Client;
+const Client = {
+  getBusinessStates,
+  getBusinessCities,
+  getBusinessZIPCodes,
+  getBusinessCategories,
+  getSelectedBusinessReviews,
+  searchBusinesses,
+  postReview,
+};
+export default Client;
