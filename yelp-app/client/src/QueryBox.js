@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import Choice from './Choice';
-import './QueryBox.css'
 
 class QueryBox extends Component {
   render() {
