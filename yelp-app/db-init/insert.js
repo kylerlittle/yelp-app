@@ -95,7 +95,7 @@ function insertBusinessHours(res, business_id, hours) {
 function insertBusinessAttributes(res, business_id, attributes) {
     for (var key in attributes) {
         if (typeof attributes[key] === 'object') {
-            insertBusinessAttributes(attributes[key]);
+            insertBusinessAttributes(res, business_id, attributes[key]);
         }
         else {
             // build query
