@@ -1,0 +1,11 @@
+#1 friend count was low (should be over 1 million)
+
+#2 number of attributes (attribute name at least) is low for distinct attributes in a certain postal code. (Select at line 67)
+
+#3 Number of checkins from line 82 does not match number of checkins from line 88. (solved!)
+
+keep running tally of friends as we insert them to verify exact number.
+
+Consider creating debug database for testing
+
+Make sure update/insert for triggers is correct
