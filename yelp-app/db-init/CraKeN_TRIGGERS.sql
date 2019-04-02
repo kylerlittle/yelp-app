@@ -117,32 +117,24 @@ EXECUTE PROCEDURE newBusinessRatingCount();
 /* update business checkin count */
 CREATE OR REPLACE FUNCTION oldBusinessCheckinCount() RETURNS trigger AS '
 BEGIN 
-    UPDATE Business AS b SET num_checkins = (SELECT SUM(checkin_count) FROM Checkins WHERE business_id = OLD.business_id GROUP BY business_id) WHERE b.business_id = OLD.business_id;
+    UPDATE Business AS b SET num_checkins = (SELECT count(*) FROM Checkins WHERE business_id = OLD.business_id GROUP BY business_id) WHERE b.business_id = OLD.business_id;
     RETURN NEW;
 END
 ' LANGUAGE plpgsql; 
 
 CREATE OR REPLACE FUNCTION newBusinessCheckinCount() RETURNS trigger AS '
 BEGIN 
-    UPDATE Business AS b SET num_checkins = (SELECT SUM(checkin_count) FROM Checkins WHERE business_id = NEW.business_id GROUP BY business_id) WHERE b.business_id = NEW.business_id;
+    UPDATE Business AS b SET num_checkins = (SELECT count(*) FROM Checkins WHERE business_id = NEW.business_id GROUP BY business_id) WHERE b.business_id = NEW.business_id;
     RETURN NEW;
 END
 ' LANGUAGE plpgsql; 
 
-DROP TRIGGER IF EXISTS deleteUpdateBusinessCheckinCount on Checkin;
 CREATE TRIGGER deleteUpdateBusinessCheckinCount
 AFTER DELETE ON Checkin
 FOR EACH ROW
 EXECUTE PROCEDURE oldBusinessCheckinCount();
 
-DROP TRIGGER IF EXISTS insertUpdateBusinessCheckinCount on Checkin;
 CREATE TRIGGER insertUpdateBusinessCheckinCount
 AFTER INSERT ON Checkin
-FOR EACH ROW
-EXECUTE PROCEDURE newBusinessCheckinCount();
-
-DROP TRIGGER IF EXISTS insertUpdateBusinessCheckinCount on Checkin;
-CREATE TRIGGER insertUpdateBusinessCheckinCount
-AFTER UPDATE ON Checkin
 FOR EACH ROW
 EXECUTE PROCEDURE newBusinessCheckinCount();
