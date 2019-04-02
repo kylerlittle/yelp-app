@@ -14,6 +14,6 @@ UPDATE Business AS b1 SET average_stars = (SELECT AVG(stars_given) FROM Review W
 UPDATE Business AS b1 SET review_rating = (SELECT AVG(stars_given) FROM Review WHERE business_id = b1.business_id);
 
 /* Update number of checkins for each business */
-UPDATE Business AS b1 SET num_checkins = (SELECT COUNT(*) FROM Checkin WHERE business_id = b1.business_id);
+UPDATE Business AS b1 SET num_checkins = (SELECT SUM(checkin_count) FROM Checkin WHERE business_id = b1.business_id);
 
 
