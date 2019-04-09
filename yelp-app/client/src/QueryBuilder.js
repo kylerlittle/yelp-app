@@ -24,7 +24,8 @@ class QueryBuilder extends Component {
         },
         matchingBusinesses: [],
         selectedBusiness: {
-
+            name: '',
+            id: '',
         },
         selectedBusinessReviews: [],
         reviewFormModalShow: false,
