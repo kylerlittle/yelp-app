@@ -9,6 +9,8 @@ import CreateReview from './CreateReview';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Container from 'react-bootstrap/Container';
+// https://www.npmjs.com/package/react-scroll
+import { Element } from 'react-scroll';
 
 class QueryBuilder extends Component {
   constructor(props) {
@@ -269,22 +271,40 @@ class QueryBuilder extends Component {
         </Row>
         <Row>
             <Col lg={3}>
-                <FilterSelectorChoices
-                    selectedCategoryList={this.state.selectedCategoryList}
-                    handleClick={this.handleSelectQueryAttribute.bind(this)}
-                />
+                <Element className="element" id="containerElement" style={{
+                position: 'relative',
+                height: '60vh',
+                overflow: 'scroll',
+                }}>
+                    <FilterSelectorChoices
+                        selectedCategoryList={this.state.selectedCategoryList}
+                        handleClick={this.handleSelectQueryAttribute.bind(this)}
+                    />
+                </Element>
             </Col>
             <Col lg={3}>
                 <QueryBox selectedQueryAttributes={this.state.selectedQueryAttributes} />
             </Col>
             <Col lg={3}>
-                <MatchingBusinesses
-                    matchingBusinesses={this.state.matchingBusinesses}
-                    handleClick={this.handleSelectBusiness.bind(this)}
-                />
+                <Element className="element" id="containerElement" style={{
+                    position: 'relative',
+                    height: '60vh',
+                    overflow: 'scroll',
+                }}>
+                    <MatchingBusinesses
+                        matchingBusinesses={this.state.matchingBusinesses}
+                        handleClick={this.handleSelectBusiness.bind(this)}
+                    />
+                </Element>
             </Col>
             <Col lg={3}>
-                <SelectedBusinessReviews reviewList={this.state.selectedBusinessReviews}/>
+                <Element className="element" id="containerElement" style={{
+                        position: 'relative',
+                        height: '60vh',
+                        overflow: 'scroll',
+                }}>
+                    <SelectedBusinessReviews reviewList={this.state.selectedBusinessReviews}/>
+                </Element>
             </Col>
         </Row>
         </Container>
