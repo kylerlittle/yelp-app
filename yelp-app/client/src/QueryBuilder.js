@@ -23,7 +23,9 @@ class QueryBuilder extends Component {
             categories: [],
         },
         matchingBusinesses: [],
-        selectedBusiness: '',
+        selectedBusiness: {
+
+        },
         selectedBusinessReviews: [],
         reviewFormModalShow: false,
     }
@@ -171,7 +173,7 @@ class QueryBuilder extends Component {
    *    handleRemoveQueryAttribute -- handle removal from QueryBox
    */
 
-  handleSelectBusiness(e) {
+  handleSelectBusiness(e, business_id) {
     /**
      * Event 'e' is click on item in selectedCategoryList
      * Initially, open write review menu for speed.
@@ -182,7 +184,7 @@ class QueryBuilder extends Component {
     var actualSelectedBusinessReviews = [];
 
     // First, find the selectedBusiness's id
-    var found = this.state.matchingBusinesses.find((b) => b['name'] === selectedBusiness.replace(/&amp;/g, '&'));
+    var found = this.state.matchingBusinesses.find((b) => b['id'] === business_id);
     console.log(found)
 
     this.setState({
