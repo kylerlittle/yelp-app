@@ -34,6 +34,7 @@ app.use(
  *      POST -- /api/reviews/:businessID
  *         ==> Body of form {user_id: "...", review_text: "", stars_given: 5}
  *         ==> Unique review_id should be generated
+ *      GET -- /api/users/:userID
  */
 app.get('/api/businesses', db.getBusinesses);
 app.get('/api/states', db.getDistinctStates);
@@ -42,6 +43,7 @@ app.get('/api/states/:state/cities/:city/zipcodes', db.getZipcodes);
 app.get('/api/reviews/:businessID', db.getReviews);
 app.get('/api/states/:state/cities/:city/zipcodes/:zipcode/categories', db.getCategories);
 app.post('/api/reviews/:businessID', db.postReview);
+app.get('/api/users/:userID', db.getUser);
 
 /**
  * List on port specified at top of file.

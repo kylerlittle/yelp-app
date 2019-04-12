@@ -33,6 +33,7 @@ const crypto = require("crypto");
  *      POST -- /api/reviews/:businessID
  *         ==> Body of form {user_id: "...", review_text: "", stars_given: 5}
  *         ==> Unique review_id should be generated
+ *      GET -- /api/users/:userID
  */
 
 const getBusinesses = (request, response) => {
@@ -187,6 +188,22 @@ const postReview = (request, response) => {
   })
 }
 
+const getUser = (request, response) => {
+  const user_id = request.params.userID;
+  const query = {
+    text: 'SELECT * \
+      FROM yelpuser \
+      WHERE user_id=$1',
+    values: [user_id],
+  }
+  pool.query(query, (error, results) => {
+    if (error) {
+      throw error
+    }
+    response.status(200).json(results.rows)
+  })
+}
+
 module.exports = {
   getBusinesses,
   getDistinctStates,
@@ -195,4 +212,5 @@ module.exports = {
   getReviews,
   getCategories,
   postReview,
+  getUser
 };
