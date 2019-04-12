@@ -93,6 +93,15 @@ function postReview(businessID, review_info, callback) {
   .then(callback)
 }
   
+function getUserInfo(userID, callback) {
+  return fetch(`/api/users/${userID}`, {
+    accept: "application/json"
+  })
+  .then(checkStatus)
+  .then(parseJSON)
+  .then(callback);
+}
+
 function checkStatus(response) {
   if (response.status >= 200 && response.status < 300) {
     return response;
@@ -116,5 +125,6 @@ const Client = {
   getSelectedBusinessReviews,
   searchBusinesses,
   postReview,
+  getUserInfo
 };
 export default Client;
