@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import logo from './logo.png';
 import './App.css';
 import QueryBuilder from './QueryBuilder';
+import UserPageModal from './UserPageModal';
 
 class App extends Component {
   render() {
@@ -11,7 +12,8 @@ class App extends Component {
           <h1>Team CraKeN's Yelp App</h1>
           <img src={logo} className="App-logo" alt="logo" />
         </header>
-        <QueryBuilder />
+        <QueryBuilder/>
+        <UserPageModal />
       </div>
     );
   }
