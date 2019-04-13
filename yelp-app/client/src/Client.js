@@ -95,12 +95,14 @@ function postReview(businessID, review_info, callback) {
   
 function getUserInfo(userID, callback) {
   console.log(userID);
-  return fetch(`/api/users/${userID}`, {
-    accept: "application/json"
-  })
-  .then(checkStatus)
-  .then(parseJSON)
-  .then(callback);
+  if (userID) {
+    return fetch(`/api/users/${userID}`, {
+      accept: "application/json"
+    })
+    .then(checkStatus)
+    .then(parseJSON)
+    .then(callback);
+  }
 }
 
 function checkStatus(response) {
