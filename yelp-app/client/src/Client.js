@@ -105,6 +105,18 @@ function getUserInfo(userID, callback) {
   }
 }
 
+function getUserFriends(userID, callback) {
+  console.log(userID);
+  if (userID) {
+    return fetch(`/api/friends/${userID}`, {
+      accept: "application/json"
+    })
+    .then(checkStatus)
+    .then(parseJSON)
+    .then(callback);
+  }
+}
+
 function checkStatus(response) {
   if (response.status >= 200 && response.status < 300) {
     return response;
@@ -128,6 +140,7 @@ const Client = {
   getSelectedBusinessReviews,
   searchBusinesses,
   postReview,
-  getUserInfo
+  getUserInfo,
+  getUserFriends
 };
 export default Client;
