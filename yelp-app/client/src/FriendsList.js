@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import './FriendsList.css';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 
@@ -13,14 +14,14 @@ class FriendsList extends Component {
             
         );
         return (
-            <div>
-            <h3>Friends</h3>
-            <Row>
-                <Col><p>Name</p></Col>
-                <Col><p>Average Stars</p></Col>
-                <Col><p>Yelping Since</p></Col>
-            </Row>
-            {friendsList}
+            <div className="FriendsList">
+                <h3>Friends</h3>
+                <Row>
+                    <Col><p>Name</p></Col>
+                    <Col><p>Average Stars</p></Col>
+                    <Col><p>Yelping Since</p></Col>
+                </Row>
+                {friendsList}
             </div>
         )
     }
