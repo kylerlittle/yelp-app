@@ -34,6 +34,7 @@ const crypto = require("crypto");
  *         ==> Body of form {user_id: "...", review_text: "", stars_given: 5}
  *         ==> Unique review_id should be generated
  *      GET -- /api/users/:userID
+ *      GET -- /api/friends/:userID
  */
 
 const getBusinesses = (request, response) => {
@@ -195,13 +196,30 @@ const getUser = (request, response) => {
       FROM yelpuser \
       WHERE user_id=$1',
     values: [user_id],
-  }
+  };
   pool.query(query, (error, results) => {
     if (error) {
-      throw error
+      throw error;
     }
-    response.status(200).json(results.rows)
-  })
+    response.status(200).json(results.rows);
+  });
+}
+
+const getFriends = (request, response) => {
+  const user_id = request.params.userID;
+  const query = {
+    text: 'SELECT * \
+      FROM yelpuser, friendswith \
+      WHERE friendswith.owner_of_friend_list=$1 and \
+            friendswith.on_friend_list=yelpuser.user_id',
+    values: [user_id],
+  };
+  pool.query(query, (error, results) => {
+    if (error) {
+      throw error;
+    }
+    response.status(200).json(results.rows);
+  });
 }
 
 module.exports = {
@@ -212,5 +230,6 @@ module.exports = {
   getReviews,
   getCategories,
   postReview,
-  getUser
+  getUser,
+  getFriends
 };
