@@ -12,7 +12,7 @@ import Container from 'react-bootstrap/Container';
 // https://www.npmjs.com/package/react-scroll
 import { Element } from 'react-scroll';
 
-class QueryBuilder extends Component {
+class BusinessSearch extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -312,4 +312,4 @@ class QueryBuilder extends Component {
   }
 }
 
-export default QueryBuilder;
+export default BusinessSearch;

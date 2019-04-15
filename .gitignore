@@ -16,3 +16,4 @@ yelp_*.json
 
 # iCloud files
 *.icloud
+.DS_Store
