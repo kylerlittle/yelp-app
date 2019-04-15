@@ -36,6 +36,7 @@ app.use(
  *         ==> Unique review_id should be generated
  *      GET -- /api/users/:userID
  *      GET -- /api/friends/:userID
+ *      GET -- /api/friendsreviews/:userID
  */
 app.get('/api/businesses', db.getBusinesses);
 app.get('/api/states', db.getDistinctStates);
@@ -46,6 +47,7 @@ app.get('/api/states/:state/cities/:city/zipcodes/:zipcode/categories', db.getCa
 app.post('/api/reviews/:businessID', db.postReview);
 app.get('/api/users/:userID', db.getUser);
 app.get('/api/friends/:userID', db.getFriends);
+app.get('/api/friendsreviews/:userID', db.getFriendsReviews);
 
 /**
  * List on port specified at top of file.

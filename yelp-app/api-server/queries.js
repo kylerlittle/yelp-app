@@ -35,6 +35,7 @@ const crypto = require("crypto");
  *         ==> Unique review_id should be generated
  *      GET -- /api/users/:userID
  *      GET -- /api/friends/:userID
+ *      GET -- /api/friendsreviews/:userID
  */
 
 const getBusinesses = (request, response) => {
@@ -222,6 +223,23 @@ const getFriends = (request, response) => {
   });
 }
 
+const getFriendsReviews = (request, response) => {
+  const user_id = request.params.userID;
+  const query = {
+    text: 'SELECT * \
+      FROM friendswith, review \
+      WHERE friendswith.owner_of_friend_list=$1 and \
+            friendswith.on_friend_list=review.user_id',
+    values: [user_id],
+  };
+  pool.query(query, (error, results) => {
+    if (error) {
+      throw error;
+    }
+    response.status(200).json(results.rows);
+  });
+}
+
 module.exports = {
   getBusinesses,
   getDistinctStates,
@@ -231,5 +249,6 @@ module.exports = {
   getCategories,
   postReview,
   getUser,
-  getFriends
+  getFriends,
+  getFriendsReviews
 };
