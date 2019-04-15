@@ -94,7 +94,6 @@ function postReview(businessID, review_info, callback) {
 }
   
 function getUserInfo(userID, callback) {
-  console.log(userID);
   if (userID) {
     return fetch(`/api/users/${userID}`, {
       accept: "application/json"
@@ -106,9 +105,19 @@ function getUserInfo(userID, callback) {
 }
 
 function getUserFriends(userID, callback) {
-  console.log(userID);
   if (userID) {
     return fetch(`/api/friends/${userID}`, {
+      accept: "application/json"
+    })
+    .then(checkStatus)
+    .then(parseJSON)
+    .then(callback);
+  }
+}
+
+function getFriendsReviews(userID, callback) {
+  if (userID) {
+    return fetch(`/api/friendsreviews/${userID}`, {
       accept: "application/json"
     })
     .then(checkStatus)
@@ -141,6 +150,7 @@ const Client = {
   searchBusinesses,
   postReview,
   getUserInfo,
-  getUserFriends
+  getUserFriends,
+  getFriendsReviews
 };
 export default Client;

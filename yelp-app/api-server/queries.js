@@ -223,13 +223,18 @@ const getFriends = (request, response) => {
   });
 }
 
+/* Get most recent review of each friend */
 const getFriendsReviews = (request, response) => {
   const user_id = request.params.userID;
   const query = {
     text: 'SELECT * \
-      FROM friendswith, review \
-      WHERE friendswith.owner_of_friend_list=$1 and \
-            friendswith.on_friend_list=review.user_id',
+      FROM friendswith as FW, review as R \
+      WHERE FW.owner_of_friend_list=$1 and \
+            FW.on_friend_list=R.user_id and \
+            R.date_written >= \
+              (SELECT MAX(R2.date_written) \
+              FROM review as R2 \
+              WHERE R2.user_id=R.user_id)',
     values: [user_id],
   };
   pool.query(query, (error, results) => {

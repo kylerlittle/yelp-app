@@ -2,13 +2,14 @@ import React, { Component } from 'react';
 import Client from './Client';
 import UserInfo from './UserInfo';
 import FriendsList from './FriendsList';
+import SelectedBusinessReviews from './SelectedBusinessReviews';
+import './UserPageModal.css';
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Tabs from 'react-bootstrap/Tabs';
 import Tab from 'react-bootstrap/Tab';
-import TabContent from 'react-bootstrap/TabContent';
 
 class UserPageModal extends Component {
   constructor(props) {
@@ -20,6 +21,7 @@ class UserPageModal extends Component {
     this.setUser = this.setUser.bind(this);
     this.logoutUser = this.logoutUser.bind(this);
     this.setFriends = this.setFriends.bind(this);
+    this.setFriendsReviews = this.setFriendsReviews.bind(this);
 
     this.state = {
       show: false,
@@ -27,6 +29,7 @@ class UserPageModal extends Component {
       searchUserID: '',
       userInfo: {},
       friends: [],
+      friendsReviews: [],
       tabsKey: '',
     };
   }
@@ -59,6 +62,7 @@ class UserPageModal extends Component {
           userInfo: user,
         });
         this.setFriends(user['user_id']);
+        this.setFriendsReviews(user['user_id']);
         console.log(user['user_name']);
       }
     });
@@ -84,6 +88,7 @@ class UserPageModal extends Component {
               long: '',
       },
       friends: [],
+      friendsReviews: [],
     });
     console.log(this.state);
   }
@@ -99,6 +104,21 @@ class UserPageModal extends Component {
           friends: friends,
         });
         console.log(this.state.friends);
+      }
+    });
+  }
+  setFriendsReviews(userID) {
+    /**
+     * Get most recent review of each friend of current logged in user.
+     * Set friends reviews list.
+     */
+    Client.getFriendsReviews(userID, (reviews) =>{
+      if (reviews) {
+        this.setState({
+          ...this.state,
+          friendsReviews: reviews,
+        });
+        console.log(this.state.friendsReviews);
       }
     });
   }
@@ -124,14 +144,8 @@ class UserPageModal extends Component {
             </div>
           </div>
           <Row>
-            { /* User Information */ }
-            <Col lg={6} >
-              <UserInfo currUser={this.state['userInfo']}/>
-            </Col>
-            
-
-            <Col lg={6}>
-              <Tabs defaultActiveKey="friendsReviews" 
+            <Col lg={12} >
+              <Tabs defaultActiveKey="userInfo" 
                     id="uncontrolled-tab-example" 
                     activeKey={this.state.key}
                     onSelect={key => this.setState({ 
@@ -139,23 +153,23 @@ class UserPageModal extends Component {
                       tabsKey: key,
                     })}
               >
-                <Tab eventKey="friends" title="Friends">
-                  <TabContent>
-                    { /* Friends list */ }
-                    <FriendsList friendsList={this.state['friends']}/>
-                  </TabContent>
+                { /* User Information */ }
+                <Tab className="Tab" eventKey="userInfo" title="User Info">
+                  <UserInfo currUser={this.state['userInfo']}/>
                 </Tab>
-                <Tab eventKey="friendsReviews" title="Reviews">
-                  <p>hello2</p>
+                { /* Friends list */ }
+                <Tab className="Tab" eventKey="friends" title="Friends">
+                  <FriendsList friendsList={this.state['friends']}/>
                 </Tab>
-                <Tab eventKey="favoriteBusinesses" title="Favorite Businesses" disabled>
+                <Tab className="Tab" eventKey="friendsReviews" title="Friend's Reviews">
+                  <SelectedBusinessReviews reviewList={this.state.friendsReviews}/>
+                </Tab>
+                <Tab className="Tab" eventKey="favoriteBusinesses" title="Favorite Businesses" disabled>
                   <p>hello3</p>
                 </Tab>
               </Tabs>
             </Col>
           </Row>
-
-          
         </Modal.Body>
 
         <Modal.Footer>
