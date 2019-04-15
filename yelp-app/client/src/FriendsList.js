@@ -23,6 +23,7 @@ class FriendsList extends Component {
                 </Row>
                 {friendsList}
             </div>
+            
         )
     }
 }

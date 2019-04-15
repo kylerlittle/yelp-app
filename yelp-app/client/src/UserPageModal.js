@@ -6,7 +6,9 @@ import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
-import Tabs from 'react-bootstrap/Tabs'
+import Tabs from 'react-bootstrap/Tabs';
+import Tab from 'react-bootstrap/Tab';
+import TabContent from 'react-bootstrap/TabContent';
 
 class UserPageModal extends Component {
   constructor(props) {
@@ -25,6 +27,7 @@ class UserPageModal extends Component {
       searchUserID: '',
       userInfo: {},
       friends: [],
+      tabsKey: '',
     };
   }
   handleClose() {
@@ -125,11 +128,34 @@ class UserPageModal extends Component {
             <Col lg={6} >
               <UserInfo currUser={this.state['userInfo']}/>
             </Col>
-            { /* Friends list */ }
+            
+
             <Col lg={6}>
-              <FriendsList friendsList={this.state['friends']}/>
-            </Col> 
+              <Tabs defaultActiveKey="friendsReviews" 
+                    id="uncontrolled-tab-example" 
+                    activeKey={this.state.key}
+                    onSelect={key => this.setState({ 
+                      ...this.state,
+                      tabsKey: key,
+                    })}
+              >
+                <Tab eventKey="friends" title="Friends">
+                  <TabContent>
+                    { /* Friends list */ }
+                    <FriendsList friendsList={this.state['friends']}/>
+                  </TabContent>
+                </Tab>
+                <Tab eventKey="friendsReviews" title="Reviews">
+                  <p>hello2</p>
+                </Tab>
+                <Tab eventKey="favoriteBusinesses" title="Favorite Businesses" disabled>
+                  <p>hello3</p>
+                </Tab>
+              </Tabs>
+            </Col>
           </Row>
+
+          
         </Modal.Body>
 
         <Modal.Footer>
