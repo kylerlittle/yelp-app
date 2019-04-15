@@ -1,11 +1,12 @@
 import React, { Component } from 'react';
 import Client from './Client';
+import UserInfo from './UserInfo';
 import FriendsList from './FriendsList';
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
-
+import Tabs from 'react-bootstrap/Tabs'
 
 class UserPageModal extends Component {
   constructor(props) {
@@ -22,20 +23,10 @@ class UserPageModal extends Component {
       show: false,
       userID: '',
       searchUserID: '',
-      userName: '',
-      userInfo: null,
-      yelping_since: '',
-      fans: '',
-      average_stars: '',
-      funny: '',
-      cool: '',
-      useful: '',
-      lat: 0,
-      long: 0,
+      userInfo: {},
       friends: [],
     };
   }
-
   handleClose() {
     this.setState({ show: false });
   }   
@@ -62,14 +53,7 @@ class UserPageModal extends Component {
         this.setState({
           ...this.state,
           userID: user['user_id'],
-          userName: user['user_name'],
           userInfo: user,
-          yelping_since: user['yelping_since'].split('T')[0],
-          fans: user['fans'],
-          average_stars: user['average_stars'],
-          funny: user['funny'],
-          cool: user['cool'],
-          useful: user['useful'],
         });
         this.setFriends(user['user_id']);
         console.log(user['user_name']);
@@ -84,16 +68,18 @@ class UserPageModal extends Component {
     this.setState({
       ...this.state,
       userID: '',
-      userName: '',
-      userInfo: null,
-      yelping_since: '',
-      fans: '',
-      average_stars: '',
-      funny: '',
-      cool: '',
-      useful: '',
-      lat: 0,
-      long: 0,
+      userInfo: {
+              userID: '',
+              user_name: '',
+              yelping_since: '',
+              fans: '',
+              average_stars: '',
+              funny: '',
+              cool: '',
+              useful: '',
+              lat: '',
+              long: '',
+      },
       friends: [],
     });
     console.log(this.state);
@@ -127,59 +113,23 @@ class UserPageModal extends Component {
         </Modal.Header>
 
         <Modal.Body>
-        { /* Login Form */ }
-        <div class="input-group mb-3">
-          <input type="text" class="form-control" placeholder="User ID" onChange={this.handleTextChange}></input>
-          <div class="input-group-append">
-            <button class="btn btn-outline-secondary" type="button" onClick={this.setUser}>Login</button>
+          { /* Login Form */ }
+          <div class="input-group mb-3">
+            <input type="text" class="form-control" placeholder="User ID" onChange={this.handleTextChange}></input>
+            <div class="input-group-append">
+              <button class="btn btn-outline-secondary" type="button" onClick={this.setUser}>Login</button>
+            </div>
           </div>
-        </div>
-
-        <Row>
-          { /* User Information */ }
-          <Col lg={6} className="userInfo">
-            <p>Name:</p>
-            <input type="text" value={this.state['userName']}></input>
-            <p>Yelping Since</p>
-            <input type="text" value={this.state['yelping_since']}></input>
-            <p>Stars</p>
-            <input type="text" value={this.state['average_stars']}></input>
-            <p>Fans</p>
-            <input type="text" value={this.state['fans']}></input>
-            { /* Funny, cool, useful */ }
-            <Row>
-              <Col>
-                <p>Funny</p>
-                <input type="text" value={this.state['funny']} style={{width: 60}}></input>
-              </Col>
-              <Col>
-                <p>Cool</p>
-                <input type="text" value={this.state['cool']} style={{width: 60}}></input>
-              </Col>
-              <Col>
-                <p>Useful</p>
-                <input type="text" value={this.state['useful']} style={{width: 60}}></input>
-              </Col> 
-            </Row>
-            { /* Latitude, longitude */ }
-            <Row>
-              <Col>
-                <p>Latitude</p>
-                <input type="text" value={this.state['lat']} style={{width: 130}}></input>
-              </Col>
-              <Col>
-                <p>Longitude</p>
-                <input type="text" value={this.state['long']} style={{width: 130}}></input>
-              </Col> 
-            </Row> 
-          </Col>
-          { /* Friends list */ }
-          <Col lg={6}>
-            <FriendsList friendsList={this.state.friends}/>
-          </Col>
-
-          
-        </Row>
+          <Row>
+            { /* User Information */ }
+            <Col lg={6} >
+              <UserInfo currUser={this.state['userInfo']}/>
+            </Col>
+            { /* Friends list */ }
+            <Col lg={6}>
+              <FriendsList friendsList={this.state['friends']}/>
+            </Col> 
+          </Row>
         </Modal.Body>
 
         <Modal.Footer>
