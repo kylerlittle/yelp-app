@@ -4,13 +4,12 @@ import FilterSelectorChoices from './FilterSelectorChoices';
 import Client from './Client';
 import QueryBox from './QueryBox';
 import MatchingBusinesses from './MatchingBusinesses';
-import SelectedBusinessReviews from './SelectedBusinessReviews';
-import CreateReview from './CreateReview';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Container from 'react-bootstrap/Container';
 // https://www.npmjs.com/package/react-scroll
 import { Element } from 'react-scroll';
+import SelectedBusiness from './SelectedBusiness';
 
 class BusinessSearch extends Component {
   constructor(props) {
@@ -29,8 +28,7 @@ class BusinessSearch extends Component {
             name: '',
             id: '',
         },
-        selectedBusinessReviews: [],
-        reviewFormModalShow: false,
+        selectedBusinessModalShow: false,
     }
   }
 
@@ -176,25 +174,24 @@ class BusinessSearch extends Component {
    *    handleRemoveQueryAttribute -- handle removal from QueryBox
    */
 
-  handleSelectBusiness(e, business_id) {
+  handleSelectBusiness(business_id) {
     /**
-     * Event 'e' is click on item in selectedCategoryList
-     * Initially, open write review menu for speed.
-     * Update selectedBusiness and selectedBusinessReviews.
+     * Business selected has an ID 'business_id'.
+     * 
+     * Open up the SelectedBusiness modal. Query to get the review list.
+     * In the future, might want to move this elsewhere.
      */
-    const selectedBusiness = e.target.innerText;
-    console.log(`selectedBusiness: ${selectedBusiness}`);
-    var actualSelectedBusinessReviews = [];
 
     // First, find the selectedBusiness's id
     var found = this.state.matchingBusinesses.find((b) => b['id'] === business_id);
-    console.log(found)
 
     this.setState({
         ...this.state,
-        reviewFormModalShow: true,
+        selectedBusinessModalShow: true,
         selectedBusiness: found,
     });
+
+    var actualSelectedBusinessReviews = [];
 
     Client.getSelectedBusinessReviews(found['id'], (reviews) => {
         reviews.forEach(element => {
@@ -205,72 +202,42 @@ class BusinessSearch extends Component {
             selectedBusinessReviews: actualSelectedBusinessReviews,
         });
     })
-
-    console.log(this.state)
   }
 
-  reviewFormModalClose() {
+  selectedBusinessModalClose() {
     this.setState({
         ...this.state,
-        reviewFormModalShow: false,
+        selectedBusinessModalShow: false,
     })
-  }
-
-  handleSubmitReview(review_info) {
-    var businessReviews = [];
-
-    Client.postReview(this.state.selectedBusiness['id'], review_info,
-        (ignoreResponse) => {
-            // Quickly, close modal window.
-            this.setState({
-                ...this.state,
-                reviewFormModalShow: false,
-            })
-            // Now, since review is new, update!
-            Client.getSelectedBusinessReviews(this.state.selectedBusiness['id'], (reviews) => {
-                reviews.forEach(element => {
-                    businessReviews.push(element)
-                });
-                this.setState({
-                    ...this.state,
-                    selectedBusinessReviews: businessReviews,
-                });
-            })
-        }
-    );
   }
 
   render() {
     return (
         <Container fluid={true}>
-        <CreateReview
-            show={this.state.reviewFormModalShow}
-            onHide={this.reviewFormModalClose.bind(this)}
-            businessName={this.state.selectedBusiness['name']}
-            handleSubmit={this.handleSubmitReview.bind(this)}
+        <SelectedBusiness
+            selectedBusiness={this.state.selectedBusiness}
+            selectedBusinessReviews={this.state.selectedBusinessReviews}
+            show={this.state.selectedBusinessModalShow}
+            onHide={this.selectedBusinessModalClose.bind(this)}
+            userID={this.props.userID}
         />
         <Row>
-            <Col lg={3}>
+            <Col lg={4}>
                 <FilterSelector handleSelect={this.fillFilterSelectorChoices.bind(this)} />
             </Col>
-            <Col lg={3}>
+            <Col lg={4}>
                 <h5>
                     Query Box
                 </h5>
             </Col>
-            <Col lg={3}>
+            <Col lg={4}>
                 <h5>
                     Matching Businesses
                 </h5>
             </Col>
-            <Col lg={3}>
-                <h5>
-                    {`${(this.state.selectedBusiness) ? this.state.selectedBusiness['name'] : ''} Reviews`}
-                </h5>
-            </Col>
         </Row>
         <Row>
-            <Col lg={3}>
+            <Col lg={4}>
                 <Element className="element" id="containerElement" style={{
                 position: 'relative',
                 height: '60vh',
@@ -282,10 +249,10 @@ class BusinessSearch extends Component {
                     />
                 </Element>
             </Col>
-            <Col lg={3}>
+            <Col lg={4}>
                 <QueryBox selectedQueryAttributes={this.state.selectedQueryAttributes} />
             </Col>
-            <Col lg={3}>
+            <Col lg={4}>
                 <Element className="element" id="containerElement" style={{
                     position: 'relative',
                     height: '60vh',
@@ -295,15 +262,6 @@ class BusinessSearch extends Component {
                         matchingBusinesses={this.state.matchingBusinesses}
                         handleClick={this.handleSelectBusiness.bind(this)}
                     />
-                </Element>
-            </Col>
-            <Col lg={3}>
-                <Element className="element" id="containerElement" style={{
-                        position: 'relative',
-                        height: '60vh',
-                        overflow: 'scroll',
-                }}>
-                    <SelectedBusinessReviews reviewList={this.state.selectedBusinessReviews}/>
                 </Element>
             </Col>
         </Row>

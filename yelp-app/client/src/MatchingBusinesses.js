@@ -5,7 +5,7 @@ import './MatchingBusinesses.css'
 class MatchingBusinesses extends Component {
   render() {
     const formattedList = this.props.matchingBusinesses.map((business) =>
-        <Choice handleClick={(e) => this.props.handleClick(e, business['id'])}>
+        <Choice handleClick={(e) => this.props.handleClick(business['id'])}>
         {business['name']}
         </Choice>
     );

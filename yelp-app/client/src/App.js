@@ -4,6 +4,14 @@ import './App.css';
 import BusinessSearch from './BusinessSearch';
 
 class App extends Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      user_id : 'om5ZiponkpRqUNa3pVPiRg',
+    }
+  }
+
   render() {
     return (
       <div className="App">
@@ -11,7 +19,9 @@ class App extends Component {
           <h1>Team CraKeN's Yelp App</h1>
           <img src={logo} className="App-logo" alt="logo" />
         </header>
-        <BusinessSearch />
+        <BusinessSearch
+          userID={this.state.user_id}
+        />
       </div>
     );
   }
