@@ -10,6 +10,7 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Tabs from 'react-bootstrap/Tabs';
 import Tab from 'react-bootstrap/Tab';
+import { Element } from 'react-scroll';
 
 class UserPageModal extends Component {
   constructor(props) {
@@ -161,10 +162,19 @@ class UserPageModal extends Component {
                 <Tab className="Tab" eventKey="friends" title="Friends">
                   <FriendsList friendsList={this.state['friends']}/>
                 </Tab>
+                { /* Friends Reviews list */ }
                 <Tab className="Tab" eventKey="friendsReviews" title="Friend's Reviews">
-                  <SelectedBusinessReviews reviewList={this.state.friendsReviews}/>
+                  <Element className="element" id="containerElement" style={{
+                          position: 'relative',
+                          height: '60vh',
+                          overflowY: 'scroll',
+                          overflowX: 'hidden',
+                  }}>
+                    <SelectedBusinessReviews reviewList={this.state.friendsReviews}/>
+                  </Element>
                 </Tab>
-                <Tab className="Tab" eventKey="favoriteBusinesses" title="Favorite Businesses" disabled>
+                { /* User Favorite Businesses */ }
+                <Tab className="Tab" eventKey="favoriteBusinesses" title="Favorite Businesses">
                   <p>hello3</p>
                 </Tab>
               </Tabs>
