@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import Choice from './Choice';
+import Choice from '../Choice';
 import StarRatings from 'react-star-ratings';
 import './FavoriteBusinessList.css';
 

@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
-import Client from './Client';
+import Client from '../Client';
 import UserInfo from './UserInfo';
 import FriendsList from './FriendsList';
-import SelectedBusinessReviews from './SelectedBusinessReviews';
+import SelectedBusinessReviews from '../SelectedBusinessReviews';
 import FavoriteBusinessList from './FavoriteBusinessList';
 import './UserPageModal.css';
 import Modal from 'react-bootstrap/Modal';
