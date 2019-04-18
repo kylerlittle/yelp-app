@@ -38,6 +38,7 @@ app.use(
  *      GET -- /api/friends/:userID
  *      GET -- /api/friendsreviews/:userID
  *      DELETE -- /api/favorite/:businessID/user/:userID
+ *      GET -- /api/userfavorites/:userID
  */
 app.get('/api/businesses', db.getBusinesses);
 app.get('/api/states', db.getDistinctStates);
@@ -50,6 +51,7 @@ app.get('/api/users/:userID', db.getUser);
 app.get('/api/friends/:userID', db.getFriends);
 app.get('/api/friendsreviews/:userID', db.getFriendsReviews);
 app.delete('/api/favorite/:businessID/user/:userID', db.deleteFavoriteBusiness);
+app.get('/api/userfavorites/:userID', db.getFavoriteBusinesses);
 
 /**
  * List on port specified at top of file.
