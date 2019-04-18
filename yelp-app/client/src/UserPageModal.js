@@ -3,6 +3,7 @@ import Client from './Client';
 import UserInfo from './UserInfo';
 import FriendsList from './FriendsList';
 import SelectedBusinessReviews from './SelectedBusinessReviews';
+import FavoriteBusinessList from './FavoriteBusinessList';
 import './UserPageModal.css';
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
@@ -23,20 +24,24 @@ class UserPageModal extends Component {
     this.logoutUser = this.logoutUser.bind(this);
     this.setFriends = this.setFriends.bind(this);
     this.setFriendsReviews = this.setFriendsReviews.bind(this);
+    this.setFavoriteBusinesses = this.setFavoriteBusinesses.bind(this);
 
     this.state = {
       show: false,
       userID: '',
-      searchUserID: '',
+      searchUserID: '',       // current string entered in login form
       userInfo: {},
       friends: [],
       friendsReviews: [],
-      tabsKey: '',
+      favoriteBusinesses: [],
+      tabsKey: '',            // current selected tab
     };
   }
+
   handleClose() {
     this.setState({ show: false });
   }   
+
   handleShow() {
     this.setState({ show: true });
   }
@@ -48,6 +53,7 @@ class UserPageModal extends Component {
       searchUserID: value,
     });
   }
+
   setUser(e) {
     // sample userID: om5ZiponkpRqUNa3pVPiRg
     /**
@@ -64,10 +70,12 @@ class UserPageModal extends Component {
         });
         this.setFriends(user['user_id']);
         this.setFriendsReviews(user['user_id']);
+        this.setFavoriteBusinesses(user['user_id']);
         console.log(user['user_name']);
       }
     });
   }
+
   logoutUser(e) {
     /**
      * Logout current user.
@@ -90,9 +98,11 @@ class UserPageModal extends Component {
       },
       friends: [],
       friendsReviews: [],
+      favoriteBusinesses: [],
     });
     console.log(this.state);
   }
+
   setFriends(userID) {
     /**
      * Get friends list of current logged in user.
@@ -108,6 +118,7 @@ class UserPageModal extends Component {
       }
     });
   }
+
   setFriendsReviews(userID) {
     /**
      * Get most recent review of each friend of current logged in user.
@@ -120,6 +131,22 @@ class UserPageModal extends Component {
           friendsReviews: reviews,
         });
         console.log(this.state.friendsReviews);
+      }
+    });
+  }
+
+  setFavoriteBusinesses(userID) {
+    /**
+     * Get favorite businesses of current logged in user.
+     * Set favorite businesses list.
+     */
+    Client.getFavoriteBusinesses(userID, (businesses) =>{
+      if (businesses) {
+        this.setState({
+          ...this.state,
+          favoriteBusinesses: businesses,
+        });
+        console.log(this.state.favoriteBusinesses);
       }
     });
   }
@@ -175,7 +202,14 @@ class UserPageModal extends Component {
                 </Tab>
                 { /* User Favorite Businesses */ }
                 <Tab className="Tab" eventKey="favoriteBusinesses" title="Favorite Businesses">
-                  <p>hello3</p>
+                  <Element className="element" id="containerElement" style={{
+                            position: 'relative',
+                            height: '60vh',
+                            overflowY: 'scroll',
+                            overflowX: 'hidden',
+                    }}>
+                    <FavoriteBusinessList businessList={this.state.favoriteBusinesses}/>
+                  </Element>
                 </Tab>
               </Tabs>
             </Col>

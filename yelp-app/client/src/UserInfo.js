@@ -79,7 +79,7 @@ class UserInfo extends Component {
             </div>
             </>
         );
-      }
+    }
 }
 
 export default UserInfo;

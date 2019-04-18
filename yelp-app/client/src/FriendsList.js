@@ -15,7 +15,6 @@ class FriendsList extends Component {
         );
         return (
             <div className="FriendsList">
-                <h3>Friends</h3>
                 <Row>
                     <Col><p>Name</p></Col>
                     <Col><p>Average Stars</p></Col>
