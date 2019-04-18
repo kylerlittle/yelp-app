@@ -145,7 +145,7 @@ class UserPageModal extends Component {
             </div>
           </div>
           <Row>
-            <Col lg={12} >
+            <Col lg={12}>
               <Tabs defaultActiveKey="userInfo" 
                     id="uncontrolled-tab-example" 
                     activeKey={this.state.key}

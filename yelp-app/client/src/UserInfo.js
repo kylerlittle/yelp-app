@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
+import Button from 'react-bootstrap/Button';
 
 class UserInfo extends Component {
     constructor(props) {
@@ -56,15 +57,25 @@ class UserInfo extends Component {
                 </Row>
                 { /* Latitude, longitude */ }
                 <Row>
-                    <Col>
-                    <p>Latitude</p>
-                    <input type="text" value={this.props.currUser['lat']} style={{width: 130}}></input>
+                    <Col lg={4}>
+                        <p>Latitude</p>
                     </Col>
-                    <Col>
-                    <p>Longitude</p>
-                    <input type="text" value={this.props.currUser['long']} style={{width: 130}}></input>
+                    <Col lg={4}>
+                        <p>Longitude</p>
                     </Col> 
                 </Row> 
+                <Row>
+                    <Col>
+                        <input type="text" defaultValue={this.props.currUser['lat']} style={{width: 130}}></input>
+                    </Col>
+                    <Col>
+                        <input type="text" defaultValue={this.props.currUser['long']} style={{width: 130}}></input>
+                    </Col> 
+                    <Col>
+                    <Button variant="info" size="sm">Submit Changes</Button>
+                    </Col> 
+                </Row> 
+                
             </div>
             </>
         );
