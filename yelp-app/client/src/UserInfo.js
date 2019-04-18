@@ -72,7 +72,7 @@ class UserInfo extends Component {
                         <input type="text" defaultValue={this.props.currUser['long']} style={{width: 130}}></input>
                     </Col> 
                     <Col>
-                    <Button variant="info" size="sm">Submit Changes</Button>
+                    <Button variant="info" size="sm">Update Location</Button>
                     </Col> 
                 </Row> 
                 

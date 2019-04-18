@@ -36,6 +36,7 @@ const crypto = require("crypto");
  *      GET -- /api/users/:userID
  *      GET -- /api/friends/:userID
  *      GET -- /api/friendsreviews/:userID
+ *      DELETE -- /api/favorite/:businessID/user/:userID
  */
 
 const getBusinesses = (request, response) => {
@@ -249,6 +250,23 @@ const getFriendsReviews = (request, response) => {
   });
 }
 
+/* Delete business from user's favorites list */
+const deleteFavoriteBusiness = (request, response) => {
+  const user_id = request.params.userID;
+  const business_id = request.params.businessID;
+  const query = {
+    text: 'DELETE FROM favorite \
+           WHERE user_id=$1 and business_id=$2',
+    values: [user_id, business_id],
+  };
+  pool.query(query, (error, results) => {
+    if (error) {
+      throw error;
+    }
+    response.status(200).json({status: 'Delete successful!',});
+  });
+}
+
 module.exports = {
   getBusinesses,
   getDistinctStates,
@@ -259,5 +277,6 @@ module.exports = {
   postReview,
   getUser,
   getFriends,
-  getFriendsReviews
+  getFriendsReviews,
+  deleteFavoriteBusiness
 };
