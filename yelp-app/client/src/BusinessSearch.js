@@ -21,7 +21,10 @@ class BusinessSearch extends Component {
             state: '',
             city: '',
             zipcode: '',
+            price: '',
             categories: [],
+            attributes: [],
+            meals: [],
         },
         matchingBusinesses: [],
         selectedBusiness: {
@@ -59,14 +62,18 @@ class BusinessSearch extends Component {
      * Use target's (option's) value for selectedCategoryList, but
      * convert it to the correct URI for the calls to backend.
      */
-    var returnedSelectedCategoryList = [], selectedCategoryAPI;
+    var returnedSelectedCategoryList = [], selectedCategoryAPI = '';
     const selectedCategory = e.target.value;
     
     switch(selectedCategory) {
         case "state": selectedCategoryAPI = "states"; break;
         case "city": selectedCategoryAPI = "cities"; break;
         case "zipcode": selectedCategoryAPI = "zipcodes"; break;
+        case "price": selectedCategoryAPI = "prices"; break;
         case "categories": selectedCategoryAPI = "categories"; break;
+        case "attributes": selectedCategoryAPI = "attributes"; break;
+        case "meals": selectedCategoryAPI = "meals"; break;
+        default: console.log("fillFilterSelectorChoices() -- bad selectedCategory"); break;
     }
 
     Client.getSelectedQueryAttributeWithQueryString(
@@ -101,7 +108,6 @@ class BusinessSearch extends Component {
     } else {
         newSelectedQueryAttributes[this.state.selectedCategory] = selectedAttribute;
     }
-    console.log(newSelectedQueryAttributes);
 
     Client.searchBusinesses(newSelectedQueryAttributes, (businesses) => {
         businesses.forEach(element => {
@@ -113,7 +119,6 @@ class BusinessSearch extends Component {
             matchingBusinesses: actualBusinessList,
         });
     })
-    console.log(this.state.selectedQueryAttributes);
   }
 
   /**
