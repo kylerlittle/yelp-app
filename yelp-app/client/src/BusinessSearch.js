@@ -37,16 +37,18 @@ class BusinessSearch extends Component {
      * Assume initial selection of category is 'state'. When component mounts,
      * update the selectedCategoryList with the stateList retrieved from backend.
      */
-    var actualStateList = [];
+    var returnedSelectedCategoryList = [];
 
-    Client.getBusinessStates((states) => {
+    Client.getSelectedQueryAttributeWithQueryString('states', {},
+        (states) => {
         states.forEach(element => {
-            actualStateList.push(element['business_state'])
+            returnedSelectedCategoryList.push(Object.values(element)[0])
         })
+        /* By default, display 'state' when user loads page. */
         this.setState({
             ...this.state,
             selectedCategory: 'state',
-            selectedCategoryList: actualStateList,
+            selectedCategoryList: returnedSelectedCategoryList,
         });
     });
   }
@@ -54,85 +56,30 @@ class BusinessSearch extends Component {
   fillFilterSelectorChoices(e) {
     /**
      * Event 'e' is selection of category in <select>.
-     * Use target's (option's) value to switch on.
-     * > TODO
-     *      Refactor code here.
-     *      Set the values of each <option> to match the API calls.
+     * Use target's (option's) value for selectedCategoryList, but
+     * convert it to the correct URI for the calls to backend.
      */
-    var returnedSelectedCategoryList = [];
+    var returnedSelectedCategoryList = [], selectedCategoryAPI;
     const selectedCategory = e.target.value;
+    
+    switch(selectedCategory) {
+        case "state": selectedCategoryAPI = "states"; break;
+        case "city": selectedCategoryAPI = "cities"; break;
+        case "zipcode": selectedCategoryAPI = "zipcodes"; break;
+        case "categories": selectedCategoryAPI = "categories"; break;
+    }
 
-    switch (selectedCategory) {
-        case "state":
-            Client.getBusinessStates(
-                (states) => {
-                    states.forEach(element => {
-                        returnedSelectedCategoryList.push(element['business_state'])
-                    })
-                    this.setState({
-                        ...this.state,
-                        selectedCategory: selectedCategory,
-                        selectedCategoryList: returnedSelectedCategoryList,
-                    })
-                }
-            );
-            break;
-        case "city":
-            Client.getBusinessCities(
-                this.state.selectedQueryAttributes['state'],
-                (cities) => {
-                    cities.forEach(element => {
-                        returnedSelectedCategoryList.push(element['business_city'])
-                    })
-                    this.setState({
-                        ...this.state,
-                        selectedCategory: selectedCategory,
-                        selectedCategoryList: returnedSelectedCategoryList,
-                    })
-                }
-            );
-            break;
-        case "zipcode":
-            Client.getBusinessZIPCodes(
-                this.state.selectedQueryAttributes['state'],
-                this.state.selectedQueryAttributes['city'],
-                (zipcodes) => {
-                    zipcodes.forEach(element => {
-                        returnedSelectedCategoryList.push(element['postal_code'])
-                    })
-                    this.setState({
-                        ...this.state,
-                        selectedCategory: selectedCategory,
-                        selectedCategoryList: returnedSelectedCategoryList,
-                    })
-                }
-            );
-            break;
-        case "categories":
-            Client.getBusinessCategories(
-                this.state.selectedQueryAttributes['state'],
-                this.state.selectedQueryAttributes['city'],
-                this.state.selectedQueryAttributes['zipcode'],
-                (zipcodes) => {
-                    zipcodes.forEach(element => {
-                        returnedSelectedCategoryList.push(element['category_name'])
-                    })
-                    this.setState({
-                        ...this.state,
-                        selectedCategory: selectedCategory,
-                        selectedCategoryList: returnedSelectedCategoryList,
-                    })
-                }
-            );
-            break;
-        default:
+    Client.getSelectedQueryAttributeWithQueryString(
+        selectedCategoryAPI, this.state.selectedQueryAttributes, (returnedObj) => {
+            returnedObj.forEach(element => {
+                returnedSelectedCategoryList.push(Object.values(element)[0])
+            });
             this.setState({
                 ...this.state,
                 selectedCategory: selectedCategory,
-                selectedCategoryList: []
+                selectedCategoryList: returnedSelectedCategoryList,
             });
-            break;
-    }
+    });
   }
 
   handleSelectQueryAttribute(e) {
