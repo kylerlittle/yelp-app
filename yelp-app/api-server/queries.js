@@ -45,6 +45,29 @@ function getCategoriesSQLString(queryObj)
   return [categories, query_portion];
 }
 
+function getSQLQuery(queryObj, selection, orderBy)
+{
+  var categories, result, query_portion;
+
+  result = getCategoriesSQLString(queryObj);
+  categories = result[0];
+  query_portion = result[1];
+
+  const query = {
+    text: `SELECT DISTINCT ${selection} \
+      FROM business, categories \
+      WHERE business.business_id=categories.business_id\
+        ${(queryObj['state']) ? ' and business_state=UPPER(\'' + queryObj['state'] + '\')' : ''}\
+        ${(queryObj['city']) ? ' and business_city=\'' + queryObj['city'] + '\'' : ''}\
+        ${(queryObj['zipcode']) ? ' and postal_code=' + queryObj['zipcode'] : ''}\
+        ${(query_portion && orderBy !== 'category_name') ? ' and ' + query_portion + ' GROUP BY business.business_id, business_name, business_address, business_city, business_state \
+        HAVING COUNT (*) >= ' + categories.length: ''}\
+        ${(orderBy === '') ? '' : 'ORDER BY ' + orderBy}`,
+  }
+
+  return query;
+}
+
 /**
  * Query Parameters that can describe a business:
  *    state="", city="", zip="", categories=["", ..., ""], price="", 
@@ -79,23 +102,9 @@ function getCategoriesSQLString(queryObj)
  */
 
 const getBusinesses = (request, response) => {
-  var categories, result, query_portion;
-
-  result = getCategoriesSQLString(request.query);
-  categories = result[0];
-  query_portion = result[1];
-
-  const query = {
-    text: `SELECT DISTINCT business.business_id, business_name, business_address, business_city, business_state, postal_code \
-      FROM business, categories \
-      WHERE business.business_id=categories.business_id\
-        ${(request.query['state']) ? ' and business_state=UPPER(\'' + request.query['state'] + '\')' : ''}\
-        ${(request.query['city']) ? ' and business_city=\'' + request.query['city'] + '\'' : ''}\
-        ${(request.query['zipcode']) ? ' and postal_code=' + request.query['zipcode'] : ''}\
-        ${(query_portion) ? ' and ' + query_portion + ' GROUP BY business.business_id, business_name, business_address, business_city, business_state \
-        HAVING COUNT (*) >= ' + categories.length: ''}\
-        ORDER BY business_name`,
-  }
+  const query = getSQLQuery(request.query, 'business.business_id, business_name,\
+   business_address, business_city, business_state, postal_code', 'business_name');
+  console.log(query)
 
   pool.query(query, (error, results) => {
     if (error) {
@@ -106,21 +115,8 @@ const getBusinesses = (request, response) => {
 };
 
 const getStatesFlexible = (request, response) => {
-  var categories, result, query_portion;
-
-  result = getCategoriesSQLString(request.query);
-  categories = result[0];
-  query_portion = result[1];
-
-  const query = {
-    text: `SELECT DISTINCT business_state FROM business, categories\
-    WHERE business.business_id=categories.business_id\
-    ${(request.query['city']) ? 'and business_city = \'' + request.query['city'] + '\'' : ''} \
-    ${(request.query['zipcode']) ? 'and postal_code = \'' + request.query['zipcode'] + '\'' : ''} \
-    ${(query_portion) ? ' and ' + query_portion + ' GROUP BY business.business_id, business_name, business_address, business_city, business_state \
-    HAVING COUNT (*) >= ' + categories.length: ''}
-    ORDER BY business_state`,
-  }
+  const query = getSQLQuery(request.query, 'business_state', 'business_state');
+  console.log(query)
 
   pool.query(query, (error, results) => {
     if (error) {
@@ -131,22 +127,7 @@ const getStatesFlexible = (request, response) => {
 }
 
 const getCitiesFlexible = (request, response) => {
-  var categories, result, query_portion;
-
-  result = getCategoriesSQLString(request.query);
-  categories = result[0];
-  query_portion = result[1];
-
-  const query = {
-    text: `SELECT DISTINCT business_city FROM business, categories\
-    WHERE business.business_id=categories.business_id\
-    ${(request.query['state']) ? 'and business_state = UPPER(\'' + request.query['state'] + '\')' : ''}\
-    ${(request.query['zipcode']) ? 'and postal_code = \'' + request.query['zipcode'] + '\'' : ''}\
-    ${(query_portion) ? ' and ' + query_portion + ' GROUP BY business.business_id, business_name, ' +
-    'business_address, business_city, business_state HAVING COUNT (*) >= ' + categories.length : ''}\
-    ORDER BY business_city`,
-  }
-
+  const query = getSQLQuery(request.query, 'business_city', 'business_city');
   console.log(query)
 
   pool.query(query, (error, results) => {
@@ -158,21 +139,8 @@ const getCitiesFlexible = (request, response) => {
 }
 
 const getZipcodesFlexible = (request, response) => {
-  var categories, result, query_portion;
-
-  result = getCategoriesSQLString(request.query);
-  categories = result[0];
-  query_portion = result[1];
-
-  const query = {
-    text: `SELECT DISTINCT postal_code FROM business, categories\
-    WHERE business.business_id=categories.business_id\
-    ${(request.query['state']) ? 'and business_state = UPPER(\'' + request.query['state'] + '\')' : ''}\
-    ${(request.query['city']) ? 'and business_city = \'' + request.query['city'] + '\'' : ''}\
-    ${(query_portion) ? ' and ' + query_portion + ' GROUP BY business.business_id, business_name, ' +
-    'business_address, business_city, business_state HAVING COUNT (*) >= ' + categories.length : ''}\
-    ORDER BY postal_code`,
-  }
+  const query = getSQLQuery(request.query, 'postal_code', 'postal_code');
+  console.log(query)
 
   pool.query(query, (error, results) => {
     if (error) {
@@ -183,14 +151,8 @@ const getZipcodesFlexible = (request, response) => {
 }
 
 const getCategoriesFlexible = (request, response) => {
-  const query = {
-    text: `SELECT DISTINCT category_name FROM business, categories\
-    WHERE business.business_id=categories.business_id\
-    ${(request.query['state']) ? 'and business_state = UPPER(\'' + request.query['state'] + '\')' : ''}\
-    ${(request.query['city']) ? 'and business_city = \'' + request.query['city'] + '\'' : ''}\
-    ${(request.query['zipcode']) ? 'and postal_code = \'' + request.query['zipcode'] + '\'' : ''} \
-    ORDER BY category_name`,
-  }
+  const query = getSQLQuery(request.query, 'category_name', 'category_name');
+  console.log(query)
 
   pool.query(query, (error, results) => {
     if (error) {
