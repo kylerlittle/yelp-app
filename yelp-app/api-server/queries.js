@@ -19,30 +19,13 @@ const pool = new Pool({
  */
 const crypto = require("crypto");
 
-/**
- * Routes:
- *      GET -- /api/businesses
- *          ==> accepts query parameters: state={}, city={}, zipcode={} 
- *          ==> Body of form {categories: ["...", "...", etc]}
- *      GET -- /api/states
- *      GET -- /api/states/:state/cities
- *          ==> state='all' returns all cities
- *      GET -- /api/states/:state/cities/:city/zipcodes
- *      GET -- /api/reviews/:businessID
- *      GET -- /api/states/:state/cities/:city/zipcodes/:zipcode/categories
- *      POST -- /api/reviews/:businessID
- *         ==> Body of form {user_id: "...", review_text: "", stars_given: 5}
- *         ==> Unique review_id should be generated
- */
-
-const getBusinesses = (request, response) => {
-  const business_state = request.query['state'], business_city = request.query['city'], 
-    zipcode = request.query['zipcode'];
+function getCategoriesSQLString(queryObj)
+{
   var categories;
 
-  if (request.query['categories']) {
+  if (queryObj['categories']) {
     // Elements are comma-separated
-    categories = request.query['categories'].split(',');
+    categories = queryObj['categories'].split(',');
     // Replace any '&amp;' with an '&'
     categories = categories.map((element) => element.replace(/&amp;/g, '&'));
   }
@@ -59,19 +42,60 @@ const getBusinesses = (request, response) => {
     query_portion = `(${query_portion})`;
   }
 
+  return [categories, query_portion];
+}
+
+/**
+ * Query Parameters that can describe a business:
+ *    state="", city="", zip="", categories=["", ..., ""], price="", 
+ *    meal=["", ..., ""], attribute=["", ..., ""]
+ * 
+ *
+ * Routes:
+ * 
+ *      *** Business Search URI ***
+ *      GET -- /api/businesses?querystring
+ *          ==> Accepts query parameters: state="...", city="...", zipcode="..."
+ *          ==> and categories=["...", "...", ..., "..."]
+ * 
+ * 
+ *      *** Filters for Business Search ***
+ *      GET -- /api/states?querystring
+ *          ==> Select distinct states that match query string
+ *          ==> Accepts city, zipcode, categories
+ *      GET -- /api/cities?querystring
+ *          ==> Select distinct cities that match query string
+ *          ==> Accepts state, zipcode, categories
+ *      GET -- /api/zipcodes?querystring
+ *          ==> Select distinct zipcodes that match query string
+ *          ==> Accepts state, city, categories
+ * 
+ * 
+ *      *** Review Viewing & Submitting ***
+ *      GET -- /api/reviews/:businessID
+ *      POST -- /api/reviews/:businessID
+ *         ==> Body of form {user_id: "...", review_text: "", stars_given: 5}
+ *         ==> Unique review_id should be generated
+ */
+
+const getBusinesses = (request, response) => {
+  var categories, result, query_portion;
+
+  result = getCategoriesSQLString(request.query);
+  categories = result[0];
+  query_portion = result[1];
+
   const query = {
-    text: `SELECT DISTINCT business.business_id, business_name, business_address, business_city, business_state \
+    text: `SELECT DISTINCT business.business_id, business_name, business_address, business_city, business_state, postal_code \
       FROM business, categories \
       WHERE business.business_id=categories.business_id\
-        ${(business_state) ? ' and business_state=UPPER(\'' + business_state + '\')' : ''}\
-        ${(business_city) ? ' and business_city=\'' + business_city + '\'' : ''}\
-        ${(zipcode) ? ' and postal_code=' + zipcode : ''}\
+        ${(request.query['state']) ? ' and business_state=UPPER(\'' + request.query['state'] + '\')' : ''}\
+        ${(request.query['city']) ? ' and business_city=\'' + request.query['city'] + '\'' : ''}\
+        ${(request.query['zipcode']) ? ' and postal_code=' + request.query['zipcode'] : ''}\
         ${(query_portion) ? ' and ' + query_portion + ' GROUP BY business.business_id, business_name, business_address, business_city, business_state \
         HAVING COUNT (*) >= ' + categories.length: ''}\
         ORDER BY business_name`,
   }
-
-  console.log(query);
 
   pool.query(query, (error, results) => {
     if (error) {
@@ -81,33 +105,23 @@ const getBusinesses = (request, response) => {
   })
 };
 
-const getDistinctStates = (request, response) => {
-  pool.query('SELECT DISTINCT business_state FROM business ORDER BY business_state', (error, results) => {
-    if (error) {
-      throw error
-    }
-    response.status(200).json(results.rows)
-  })
-}
+const getStatesFlexible = (request, response) => {
+  var categories, result, query_portion;
 
-const getCities = (request, response) => {
-  const business_state = request.params.state;
-  let query;
+  result = getCategoriesSQLString(request.query);
+  categories = result[0];
+  query_portion = result[1];
 
-  // Return all cities
-  if (business_state === "all"){
-    query = {
-      text: 'SELECT DISTINCT business_city FROM business ORDER BY business_city',
-      values: [],
-    }
+  const query = {
+    text: `SELECT DISTINCT business_state FROM business, categories\
+    WHERE business.business_id=categories.business_id\
+    ${(request.query['city']) ? 'and business_city = \'' + request.query['city'] + '\'' : ''} \
+    ${(request.query['zipcode']) ? 'and postal_code = \'' + request.query['zipcode'] + '\'' : ''} \
+    ${(query_portion) ? ' and ' + query_portion + ' GROUP BY business.business_id, business_name, business_address, business_city, business_state \
+    HAVING COUNT (*) >= ' + categories.length: ''}
+    ORDER BY business_state`,
   }
-  // Return cities for only a single state
-  else{
-    query = {
-      text: 'SELECT DISTINCT business_city FROM business WHERE business_state=$1 ORDER BY business_city',
-      values: [business_state],
-    }
-  }
+
   pool.query(query, (error, results) => {
     if (error) {
       throw error
@@ -116,13 +130,68 @@ const getCities = (request, response) => {
   })
 }
 
-const getZipcodes = (request, response) => {
-  const business_state = request.params.state, business_city = request.params.city;
+const getCitiesFlexible = (request, response) => {
+  var categories, result, query_portion;
+
+  result = getCategoriesSQLString(request.query);
+  categories = result[0];
+  query_portion = result[1];
+
   const query = {
-    text: 'SELECT DISTINCT postal_code FROM business WHERE business_state=$1 and business_city=$2 \
-      ORDER BY postal_code',
-    values: [business_state, business_city],
+    text: `SELECT DISTINCT business_city FROM business, categories\
+    WHERE business.business_id=categories.business_id\
+    ${(request.query['state']) ? 'and business_state = UPPER(\'' + request.query['state'] + '\')' : ''}\
+    ${(request.query['zipcode']) ? 'and postal_code = \'' + request.query['zipcode'] + '\'' : ''}\
+    ${(query_portion) ? ' and ' + query_portion + ' GROUP BY business.business_id, business_name, ' +
+    'business_address, business_city, business_state HAVING COUNT (*) >= ' + categories.length : ''}\
+    ORDER BY business_city`,
   }
+
+  console.log(query)
+
+  pool.query(query, (error, results) => {
+    if (error) {
+      throw error
+    }
+    response.status(200).json(results.rows)
+  })
+}
+
+const getZipcodesFlexible = (request, response) => {
+  var categories, result, query_portion;
+
+  result = getCategoriesSQLString(request.query);
+  categories = result[0];
+  query_portion = result[1];
+
+  const query = {
+    text: `SELECT DISTINCT postal_code FROM business, categories\
+    WHERE business.business_id=categories.business_id\
+    ${(request.query['state']) ? 'and business_state = UPPER(\'' + request.query['state'] + '\')' : ''}\
+    ${(request.query['city']) ? 'and business_city = \'' + request.query['city'] + '\'' : ''}\
+    ${(query_portion) ? ' and ' + query_portion + ' GROUP BY business.business_id, business_name, ' +
+    'business_address, business_city, business_state HAVING COUNT (*) >= ' + categories.length : ''}\
+    ORDER BY postal_code`,
+  }
+
+  pool.query(query, (error, results) => {
+    if (error) {
+      throw error
+    }
+    response.status(200).json(results.rows)
+  })
+}
+
+const getCategoriesFlexible = (request, response) => {
+  const query = {
+    text: `SELECT DISTINCT category_name FROM business, categories\
+    WHERE business.business_id=categories.business_id\
+    ${(request.query['state']) ? 'and business_state = UPPER(\'' + request.query['state'] + '\')' : ''}\
+    ${(request.query['city']) ? 'and business_city = \'' + request.query['city'] + '\'' : ''}\
+    ${(request.query['zipcode']) ? 'and postal_code = \'' + request.query['zipcode'] + '\'' : ''} \
+    ORDER BY category_name`,
+  }
+
   pool.query(query, (error, results) => {
     if (error) {
       throw error
@@ -139,23 +208,6 @@ const getReviews = (request, response) => {
       WHERE review.business_id=$1 and review.user_id=yelpuser.user_id and review.business_id=business.business_id \
       ORDER BY review.date_written',
     values: [business_id],
-  }
-  pool.query(query, (error, results) => {
-    if (error) {
-      throw error
-    }
-    response.status(200).json(results.rows)
-  })
-}
-
-const getCategories = (request, response) => {
-  const business_state = request.params.state, business_city = request.params.city, zipcode = request.params.zipcode;
-  const query = {
-    text: 'SELECT DISTINCT category_name FROM business, categories \
-      WHERE business.business_id=categories.business_id and \
-        business_state=$1 and business_city=$2 and postal_code=$3 \
-      ORDER BY category_name',
-    values: [business_state, business_city, zipcode],
   }
   pool.query(query, (error, results) => {
     if (error) {
@@ -189,10 +241,10 @@ const postReview = (request, response) => {
 
 module.exports = {
   getBusinesses,
-  getDistinctStates,
-  getCities,
-  getZipcodes,
+  getStatesFlexible,
+  getCitiesFlexible,
+  getZipcodesFlexible,
+  getCategoriesFlexible,
   getReviews,
-  getCategories,
   postReview,
 };

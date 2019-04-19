@@ -21,26 +21,43 @@ app.use(
 );
 
 /**
+ * Query Parameters that can describe a business:
+ *    state="", city="", zip="", categories=["", ..., ""], price="", 
+ *    meal=["", ..., ""], attribute=["", ..., ""]
+ * 
+ *
  * Routes:
- *      GET -- /api/businesses
- *          ==> accepts query parameters: state={}, city={}, zipcode={} 
- *          ==> Body of form {categories: ["...", "...", etc]}
- *      GET -- /api/states
- *      GET -- /api/states/:state/cities
- *          ==> state='all' returns all cities
- *      GET -- /api/states/:state/cities/:city/zipcodes
+ * 
+ *      *** Business Search URI ***
+ *      GET -- /api/businesses?querystring
+ *          ==> Accepts query parameters: state="...", city="...", zipcode="..."
+ *          ==> and categories=["...", "...", ..., "..."]
+ * 
+ * 
+ *      *** Filters for Business Search ***
+ *      GET -- /api/states?querystring
+ *          ==> Select distinct states that match query string
+ *          ==> Accepts city, zipcode, categories
+ *      GET -- /api/cities?querystring
+ *          ==> Select distinct cities that match query string
+ *          ==> Accepts state, zipcode, categories
+ *      GET -- /api/zipcodes?querystring
+ *          ==> Select distinct zipcodes that match query string
+ *          ==> Accepts state, city, categories
+ * 
+ * 
+ *      *** Review Viewing & Submitting ***
  *      GET -- /api/reviews/:businessID
- *      GET -- /api/states/:state/cities/:city/zipcodes/:zipcode/categories
  *      POST -- /api/reviews/:businessID
  *         ==> Body of form {user_id: "...", review_text: "", stars_given: 5}
  *         ==> Unique review_id should be generated
  */
 app.get('/api/businesses', db.getBusinesses);
-app.get('/api/states', db.getDistinctStates);
-app.get('/api/states/:state/cities', db.getCities);
-app.get('/api/states/:state/cities/:city/zipcodes', db.getZipcodes);
+app.get('/api/states', db.getStatesFlexible);
+app.get('/api/cities', db.getCitiesFlexible);
+app.get('/api/zipcodes', db.getZipcodesFlexible);
+app.get('/api/categories', db.getCategoriesFlexible);
 app.get('/api/reviews/:businessID', db.getReviews);
-app.get('/api/states/:state/cities/:city/zipcodes/:zipcode/categories', db.getCategories);
 app.post('/api/reviews/:businessID', db.postReview);
 
 /**
