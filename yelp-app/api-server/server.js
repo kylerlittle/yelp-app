@@ -57,6 +57,9 @@ app.get('/api/states', db.getStatesFlexible);
 app.get('/api/cities', db.getCitiesFlexible);
 app.get('/api/zipcodes', db.getZipcodesFlexible);
 app.get('/api/categories', db.getCategoriesFlexible);
+app.get('/api/prices', db.getPricesFlexible);
+app.get('/api/attributes', db.getAttributesFlexible);
+app.get('/api/meals', db.getMealsFlexible);
 app.get('/api/reviews/:businessID', db.getReviews);
 app.post('/api/reviews/:businessID', db.postReview);
 

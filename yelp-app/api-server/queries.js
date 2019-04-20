@@ -30,37 +30,55 @@ function getCategoriesSQLString(queryObj)
     categories = categories.map((element) => element.replace(/&amp;/g, '&'));
   }
   
-  let query_portion = "";
+  let categoriesQuery = "";
 
   // Build filter-by-category portion of query
   if (categories instanceof Array) {
 
     for (i = 0, tok = ""; i < categories.length; i++){
-      query_portion += `${tok}lower(categories.category_name)=lower(\'${categories[i]}\')`;
+      categoriesQuery += `${tok}lower(categories.category_name)=lower(\'${categories[i]}\')`;
       tok = " or ";
     }
-    query_portion = `(${query_portion})`;
+    categoriesQuery = `(${categoriesQuery})`;
   }
 
-  return [categories, query_portion];
+  return [categories, categoriesQuery];
 }
 
+/**
+ * Return SQL query string S inside object { text: S }.
+ * @param {state: '', city: '', zipcode: '', categories: []} queryObj 
+ * @param {string} selection 
+ * @param {string} orderBy 
+ */
 function getSQLQuery(queryObj, selection, orderBy)
 {
-  var categories, result, query_portion;
+  var categories, result, categoriesQuery, priceQuery;
 
   result = getCategoriesSQLString(queryObj);
   categories = result[0];
-  query_portion = result[1];
+  categoriesQuery = result[1];
+
+  // get price portion of query
+  if (queryObj['price']) {
+    priceQuery = (queryObj['price'] !== 'all') ? ' and attribute_name = \'RestaurantsPriceRange2\' and ' +
+        'attribute_value = \'' + queryObj['price'] + '\'': ' and attribute_name = \'RestaurantsPriceRange2\''
+  } else {
+    priceQuery = '';
+  }
+
+  // get meals portion of query
+  // breakfast, brunch, dessert, dinner, lunch, 
 
   const query = {
     text: `SELECT DISTINCT ${selection} \
-      FROM business, categories \
-      WHERE business.business_id=categories.business_id\
+      FROM business, categories, attributes\
+      WHERE business.business_id=categories.business_id AND business.business_id = attributes.business_id\
         ${(queryObj['state']) ? ' and business_state=UPPER(\'' + queryObj['state'] + '\')' : ''}\
         ${(queryObj['city']) ? ' and business_city=\'' + queryObj['city'] + '\'' : ''}\
         ${(queryObj['zipcode']) ? ' and postal_code=' + queryObj['zipcode'] : ''}\
-        ${(query_portion && orderBy !== 'category_name') ? ' and ' + query_portion + ' GROUP BY business.business_id, business_name, business_address, business_city, business_state \
+        ${priceQuery}\
+        ${(categoriesQuery && orderBy !== 'category_name') ? ' and ' + categoriesQuery + ' GROUP BY business.business_id, business_name, business_address, business_city, business_state \
         HAVING COUNT (*) >= ' + categories.length: ''}\
         ${(orderBy === '') ? '' : 'ORDER BY ' + orderBy}`,
   }
@@ -162,6 +180,44 @@ const getCategoriesFlexible = (request, response) => {
   })
 }
 
+const getPricesFlexible = (request, response) => {
+  if (!request.query['price']) request.query['price'] = 'all';
+  const query = getSQLQuery(request.query, 'attribute_value', 'attribute_value');
+  console.log(query)
+
+  pool.query(query, (error, results) => {
+    if (error) {
+      throw error
+    }
+    response.status(200).json(results.rows)
+  })
+}
+
+const getAttributesFlexible = (request, response) => {
+  if (!request.query['meals']) request.query['meals'] = 'all';
+  const query = getSQLQuery(request.query, 'category_name', 'category_name');
+  console.log(query)
+
+  pool.query(query, (error, results) => {
+    if (error) {
+      throw error
+    }
+    response.status(200).json(results.rows)
+  })
+}
+
+const getMealsFlexible = (request, response) => {
+  const query = getSQLQuery(request.query, 'category_name', 'category_name');
+  console.log(query)
+
+  pool.query(query, (error, results) => {
+    if (error) {
+      throw error
+    }
+    response.status(200).json(results.rows)
+  })
+}
+
 const getReviews = (request, response) => {
   const business_id = request.params.businessID;
   const query = {
@@ -207,6 +263,9 @@ module.exports = {
   getCitiesFlexible,
   getZipcodesFlexible,
   getCategoriesFlexible,
+  getPricesFlexible,
+  getAttributesFlexible,
+  getMealsFlexible,
   getReviews,
   postReview,
 };
