@@ -272,9 +272,9 @@ const deleteFavoriteBusiness = (request, response) => {
 const getFavoriteBusinesses = (request, response) => {
   const user_id = request.params.userID;
   const query = {
-    text: 'SELECT B.business_name, B.business_address, \
-                B.business_city, B.business_state, \
-                B.average_stars \
+    text: 'SELECT B.business_id, B.business_name, \
+          B.business_address, B.business_city, \
+          B.business_state, B.average_stars \
           FROM favorite as F, business as B \
           WHERE F.user_id=$1 and \
                 F.business_id=B.business_id',

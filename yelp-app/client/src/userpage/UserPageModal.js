@@ -25,6 +25,7 @@ class UserPageModal extends Component {
     this.setFriends = this.setFriends.bind(this);
     this.setFriendsReviews = this.setFriendsReviews.bind(this);
     this.setFavoriteBusinesses = this.setFavoriteBusinesses.bind(this);
+    this.removeFavoriteBusinesses = this.removeFavoriteBusinesses.bind(this);
 
     this.state = {
       show: false,
@@ -45,6 +46,7 @@ class UserPageModal extends Component {
   handleShow() {
     this.setState({ show: true });
   }
+
   handleTextChange(e) {
     const { target } = e;
     const value = target.value;
@@ -151,6 +153,20 @@ class UserPageModal extends Component {
     });
   }
 
+  removeFavoriteBusinesses(businessID) {
+    /**
+     * Remove a favorite businesses of current logged in user.
+     * Update favorite businesses list.
+     */
+    console.log(businessID);
+    Client.deleteFavoriteBusinesses(this.state.userID, businessID, 
+      (ignoreResponse) => {
+        // After removal, update favorite business list
+        this.setFavoriteBusinesses(this.state.userID);
+      }
+    );
+  }
+
   render() {
     return (
       <>
@@ -208,7 +224,9 @@ class UserPageModal extends Component {
                             overflowY: 'scroll',
                             overflowX: 'hidden',
                     }}>
-                    <FavoriteBusinessList businessList={this.state.favoriteBusinesses}/>
+                    <FavoriteBusinessList businessList={this.state.favoriteBusinesses}
+                                          handleRemoveBusiness={this.removeFavoriteBusinesses}
+                    />
                   </Element>
                 </Tab>
               </Tabs>

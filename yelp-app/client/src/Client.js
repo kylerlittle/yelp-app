@@ -137,6 +137,18 @@ function getFavoriteBusinesses(userID, callback) {
   }
 }
 
+function deleteFavoriteBusinesses(userID, businessID, callback) {
+  if (userID && businessID) {
+    return fetch(`/api/favorite/${businessID}/user/${userID}`, {
+      method: "DELETE",
+      accept: "application/json"
+    })
+    .then(checkStatus)
+    .then(parseJSON)
+    .then(callback);
+  }
+}
+
 function checkStatus(response) {
   if (response.status >= 200 && response.status < 300) {
     return response;
@@ -163,6 +175,7 @@ const Client = {
   getUserInfo,
   getUserFriends,
   getFriendsReviews,
-  getFavoriteBusinesses
+  getFavoriteBusinesses,
+  deleteFavoriteBusinesses
 };
 export default Client;
