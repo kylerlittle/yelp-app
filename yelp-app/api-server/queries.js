@@ -69,7 +69,7 @@ function getCategoriesSQLString(queryObj)
       categoriesQuery += `${tok}lower(categories.category_name)=lower(\'${categories[i]}\')`;
       tok = " and ";
     }
-    categoriesQuery = `(${categoriesQuery})`;
+    // categoriesQuery = `(${categoriesQuery})`;
   }
 
   return [categories, categoriesQuery];
@@ -97,10 +97,29 @@ function getAttributesSQLString(queryObj, attributeType)
       attributesQuery += ` and (attributes.attribute_value = \'true\' or attributes.attribute_value = \'free\' or attributes.attribute_value = \'paid\')`;
       tok = " or ";
     }
-    attributesQuery = `(${attributesQuery})`;
+    // attributesQuery = `(${attributesQuery})`;
   }
 
   return [attributes, attributesQuery];
+}
+
+/**
+ * 
+ * @param {[string]} listOfQueryStrings 
+ */
+function groupQueryParamsThatAreListsWithOr(listOfQueryStrings)
+{
+  groupedQueries = "";
+
+  for (i = 0, tok = ""; i < listOfQueryStrings.length; i++)
+  {
+    if (listOfQueryStrings[i] !== '') {
+      groupedQueries += `${tok}${listOfQueryStrings[i]}`;
+      tok = " or ";
+    }
+  }
+
+  return `(${groupedQueries})`;
 }
 
 /**
@@ -118,13 +137,13 @@ function getSQLQuery(queryObj, selection, orderBy, businessSearchFlag)
   result = getCategoriesSQLString(queryObj);
   categories = result[0];
   categoriesQuery = result[1];
-  if (categoriesQuery && orderBy !== 'category_name') {
-    categoriesQuery = (categoriesQuery && orderBy !== 'category_name') ? ' and ' + categoriesQuery: '';
-  }
+  // if (categoriesQuery && orderBy !== 'category_name') {
+  //   categoriesQuery = (categoriesQuery && orderBy !== 'category_name') ? ' and ' + categoriesQuery: '';
+  // }
 
   // get price portion of query
   if (queryObj['price']) {
-    priceQuery = (queryObj['price'] !== 'all') ? ' and attribute_name = \'RestaurantsPriceRange2\' and ' +
+    priceQuery = (queryObj['price'] !== 'all') ? ' attribute_name = \'RestaurantsPriceRange2\' and ' +
         'attribute_value = \'' + queryObj['price'] + '\'': ' and attribute_name = \'RestaurantsPriceRange2\''
   } else {
     priceQuery = '';
@@ -141,7 +160,7 @@ function getSQLQuery(queryObj, selection, orderBy, businessSearchFlag)
     result = getAttributesSQLString(queryObj, 'meals');
     meals = [ ...result[0]];
     mealsQuery = result[1];
-    mealsQuery = 'and ' + mealsQuery;   // prepend an 'and '
+    // mealsQuery = 'and ' + mealsQuery;   // prepend an 'and '
   } else {
     mealsQuery = '';
   }
@@ -159,7 +178,7 @@ function getSQLQuery(queryObj, selection, orderBy, businessSearchFlag)
     result = getAttributesSQLString(queryObj, 'attributes');
     attributes = [ ...result[0]];
     attributesQuery = result[1];
-    attributesQuery = 'and ' + attributesQuery;   // prepend an 'and '
+    // attributesQuery = 'and ' + attributesQuery;   // prepend an 'and '
   } else {
     attributesQuery = '';
   }
@@ -185,17 +204,18 @@ function getSQLQuery(queryObj, selection, orderBy, businessSearchFlag)
     }
   }
 
+  groupedQueryString = groupQueryParamsThatAreListsWithOr([categoriesQuery, attributesQuery, mealsQuery])
+  console.log(`TEST: ${groupedQueryString}`)
+
   const query = {
     text: `SELECT DISTINCT ${selection} \
       FROM business, attributes\
-      WHERE business.business_id = attributes.business_id\
+      WHERE business.business_id = attributes.business_id and\
         ${(queryObj['state']) ? ' and business_state=UPPER(\'' + queryObj['state'] + '\')' : ''}\
         ${(queryObj['city']) ? ' and business_city=\'' + queryObj['city'] + '\'' : ''}\
         ${(queryObj['zipcode']) ? ' and postal_code=' + queryObj['zipcode'] : ''}\
-        ${categoriesQuery}\
         ${priceQuery}\
-        ${mealsQuery}\
-        ${attributesQuery}\
+        ${groupedQueryString}\
         ${groupByClause}\
         ${(orderBy === '') ? '' : 'ORDER BY ' + orderBy}`,
   }
@@ -415,11 +435,19 @@ BusinessAcceptsCreditCards
 RestaurantsDelivery
 NOT wifi
 
-fuck.
-true or not equal to no
-
-equal to true or equal to 'free' or equal to 'paid'
-
 lunch
 NOT dinner
+
+pizza
+restaurants
+NOT beer
+
+Simply need to combine the list [] query params into a single ()
+
+Function should take list of strings...
+if "", ignore.
+otherwise, ' or '
+in the end,
+wrap in parenthesis and return
+
 */
