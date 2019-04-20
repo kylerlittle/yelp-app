@@ -67,7 +67,7 @@ function getCategoriesSQLString(queryObj)
 
     for (i = 0, tok = ""; i < categories.length; i++){
       categoriesQuery += `${tok}lower(categories.category_name)=lower(\'${categories[i]}\')`;
-      tok = " or ";
+      tok = " and ";
     }
     categoriesQuery = `(${categoriesQuery})`;
   }
@@ -92,15 +92,15 @@ function getAttributesSQLString(queryObj, attributeType)
   if (attributes instanceof Array) {
 
     for (i = 0, tok = ""; i < attributes.length; i++){
-      attributesQuery += `${tok}(lower(attributes.attribute_name)=lower(\'${attributes[i]}\')`;
+      attributesQuery += `${tok}lower(attributes.attribute_name)=lower(\'${attributes[i]}\')`;
       // HACK > 'true' OR not 'no' to include WiFi attribute
-      attributesQuery += ` and (attributes.attribute_value = \'true\' or attributes.attribute_value != \'no\'))`;
+      attributesQuery += ` and (attributes.attribute_value = \'true\' or attributes.attribute_value != \'no\')`;
       tok = " or ";
     }
     attributesQuery = `(${attributesQuery})`;
   }
 
-  return attributesQuery;
+  return [attributes, attributesQuery];
 }
 
 /**
@@ -108,14 +108,19 @@ function getAttributesSQLString(queryObj, attributeType)
  * @param {state: '', city: '', zipcode: '', categories: []} queryObj 
  * @param {string} selection 
  * @param {string} orderBy 
+ * @param {boolean} businessSearchFlag 
  */
-function getSQLQuery(queryObj, selection, orderBy)
+function getSQLQuery(queryObj, selection, orderBy, businessSearchFlag)
 {
-  var categories, result, categoriesQuery, priceQuery, attributesQuery, mealsQuery;
+  var result, categories, categoriesQuery, priceQuery, attributes, attributesQuery, meals, mealsQuery;
 
+  // get categories query
   result = getCategoriesSQLString(queryObj);
   categories = result[0];
   categoriesQuery = result[1];
+  if (categoriesQuery && orderBy !== 'category_name') {
+    categoriesQuery = (categoriesQuery && orderBy !== 'category_name') ? ' and ' + categoriesQuery: '';
+  }
 
   // get price portion of query
   if (queryObj['price']) {
@@ -133,7 +138,9 @@ function getSQLQuery(queryObj, selection, orderBy)
         'meals': 'breakfast,brunch,dessert,dinner,lunch,latenight',
       };
     }
-    mealsQuery = getAttributesSQLString(queryObj, 'meals');
+    result = getAttributesSQLString(queryObj, 'meals');
+    meals = [ ...result[0]];
+    mealsQuery = result[1];
     mealsQuery = 'and ' + mealsQuery;   // prepend an 'and '
   } else {
     mealsQuery = '';
@@ -149,27 +156,49 @@ function getSQLQuery(queryObj, selection, orderBy)
         'RestaurantsTakeOut,WiFi,BikeParking',
       };
     }
-    attributesQuery = getAttributesSQLString(queryObj, 'attributes');
+    result = getAttributesSQLString(queryObj, 'attributes');
+    attributes = [ ...result[0]];
+    attributesQuery = result[1];
     attributesQuery = 'and ' + attributesQuery;   // prepend an 'and '
   } else {
     attributesQuery = '';
   }
 
+  var groupByClause = "", countRequired = 0;
+  if (businessSearchFlag) {
+    // need a group by clause
+    if (queryObj['meals'] || queryObj['attributes'] || (categoriesQuery && orderBy !== 'category_name')) {
+      groupByClause += ' GROUP BY business.business_id, business_name, business_address, business_city, business_state, postal_code ';
+
+      if (queryObj['meals']) {
+        countRequired += meals.length;
+      }
+
+      if (queryObj['attributes']) {
+        countRequired += attributes.length;
+      }
+
+      if (categoriesQuery && orderBy !== 'category_name') {
+        countRequired += categories.length;
+      }
+      groupByClause += `HAVING COUNT(*) = ${countRequired}`
+    }
+  }
+
   const query = {
     text: `SELECT DISTINCT ${selection} \
-      FROM business, categories, attributes\
-      WHERE business.business_id=categories.business_id AND business.business_id = attributes.business_id\
+      FROM business, attributes\
+      WHERE business.business_id = attributes.business_id\
         ${(queryObj['state']) ? ' and business_state=UPPER(\'' + queryObj['state'] + '\')' : ''}\
         ${(queryObj['city']) ? ' and business_city=\'' + queryObj['city'] + '\'' : ''}\
         ${(queryObj['zipcode']) ? ' and postal_code=' + queryObj['zipcode'] : ''}\
+        ${categoriesQuery}\
         ${priceQuery}\
-        ${(categoriesQuery && orderBy !== 'category_name') ? ' and ' + categoriesQuery: ''}\
-        ${attributesQuery}\
         ${mealsQuery}\
+        ${attributesQuery}\
+        ${groupByClause}\
         ${(orderBy === '') ? '' : 'ORDER BY ' + orderBy}`,
   }
-
-  console.log(query)
 
   return query;
 }
@@ -209,7 +238,7 @@ function getSQLQuery(queryObj, selection, orderBy)
 
 const getBusinesses = (request, response) => {
   const query = getSQLQuery(request.query, 'business.business_id, business_name,\
-   business_address, business_city, business_state, postal_code', 'business_name');
+   business_address, business_city, business_state, postal_code', 'business_name', true);
   console.log(query)
 
   pool.query(query, (error, results) => {
@@ -221,7 +250,7 @@ const getBusinesses = (request, response) => {
 };
 
 const getStatesFlexible = (request, response) => {
-  const query = getSQLQuery(request.query, 'business_state', 'business_state');
+  const query = getSQLQuery(request.query, 'business_state', 'business_state', false);
   console.log(query)
 
   pool.query(query, (error, results) => {
@@ -233,7 +262,7 @@ const getStatesFlexible = (request, response) => {
 }
 
 const getCitiesFlexible = (request, response) => {
-  const query = getSQLQuery(request.query, 'business_city', 'business_city');
+  const query = getSQLQuery(request.query, 'business_city', 'business_city', false);
   console.log(query)
 
   pool.query(query, (error, results) => {
@@ -245,7 +274,7 @@ const getCitiesFlexible = (request, response) => {
 }
 
 const getZipcodesFlexible = (request, response) => {
-  const query = getSQLQuery(request.query, 'postal_code', 'postal_code');
+  const query = getSQLQuery(request.query, 'postal_code', 'postal_code', false);
   console.log(query)
 
   pool.query(query, (error, results) => {
@@ -257,7 +286,7 @@ const getZipcodesFlexible = (request, response) => {
 }
 
 const getCategoriesFlexible = (request, response) => {
-  const query = getSQLQuery(request.query, 'category_name', 'category_name');
+  const query = getSQLQuery(request.query, 'category_name', 'category_name', false);
   console.log(query)
 
   pool.query(query, (error, results) => {
@@ -270,7 +299,7 @@ const getCategoriesFlexible = (request, response) => {
 
 const getPricesFlexible = (request, response) => {
   if (!request.query['price']) request.query['price'] = 'all';
-  const query = getSQLQuery(request.query, 'attribute_value', 'attribute_value');
+  const query = getSQLQuery(request.query, 'attribute_value', 'attribute_value', false);
   console.log(query)
 
   pool.query(query, (error, results) => {
@@ -283,7 +312,7 @@ const getPricesFlexible = (request, response) => {
 
 const getAttributesFlexible = (request, response) => {
   if (!request.query['attributes']) request.query['attributes'] = 'all';
-  const query = getSQLQuery(request.query, 'attribute_name', 'attribute_name');
+  const query = getSQLQuery(request.query, 'attribute_name', 'attribute_name', false);
   console.log(query)
 
   pool.query(query, (error, results) => {
@@ -296,7 +325,7 @@ const getAttributesFlexible = (request, response) => {
 
 const getMealsFlexible = (request, response) => {
   if (!request.query['meals']) request.query['meals'] = 'all';
-  const query = getSQLQuery(request.query, 'attribute_name', 'attribute_name');
+  const query = getSQLQuery(request.query, 'attribute_name', 'attribute_name', false);
   console.log(query)
 
   pool.query(query, (error, results) => {
@@ -358,3 +387,29 @@ module.exports = {
   getReviews,
   postReview,
 };
+
+
+/*
+Need a better way to query
+
+given attributes=BusinessAcceptsCreditCards,RestaurantsReservations
+
+select businesses where those attributes are true
+problem: multiple entries in attributes where this is true...
+
+thus for all of them to be true, need count >= categories.length + .length + .length
+for some reason this is still wrong tho
+
+
+*TEST*
+HRFJlSAP_EBU_MpPPmpUDQ
+has...
+
+RestaurantsTakeOut
+BusinessAcceptsCreditCards
+RestaurantsDelivery
+NOT wifi
+
+lunch
+NOT dinner
+*/
