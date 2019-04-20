@@ -19,6 +19,36 @@ const pool = new Pool({
  */
 const crypto = require("crypto");
 
+/**
+ * Define the attributes which for Meals
+ * which the user can filter by from the frontend
+ */
+const mealAttributes = new Set(
+  'breakfast', 
+  'brunch',
+  'dessert',
+  'dinner',
+  'lunch',
+  'latenight',
+);
+
+/**
+ * Define the attributes which the user can filter by
+ * from the frontend
+ */
+const filterableAttributes = new Set(
+  'BusinessAcceptsCreditCards', 
+  'RestaurantsReservations',
+  'WheelchairAccessible',
+  'OutdoorSeating',
+  'GoodForKids',
+  'RestaurantsGoodForGroups',
+  'RestaurantsDelivery',
+  'RestaurantsTakeOut',
+  'WiFi',
+  'BikeParking',
+);
+
 function getCategoriesSQLString(queryObj)
 {
   var categories;
@@ -45,6 +75,34 @@ function getCategoriesSQLString(queryObj)
   return [categories, categoriesQuery];
 }
 
+function getAttributesSQLString(queryObj, attributeType)
+{
+  var attributes;
+
+  if (queryObj[attributeType]) {
+    // Elements are comma-separated
+    attributes = queryObj[attributeType].split(',');
+    // Replace any '&amp;' with an '&'
+    attributes = attributes.map((element) => element.replace(/&amp;/g, '&'));
+  }
+  
+  let attributesQuery = "";
+
+  // Build filter-by-category portion of query
+  if (attributes instanceof Array) {
+
+    for (i = 0, tok = ""; i < attributes.length; i++){
+      attributesQuery += `${tok}(lower(attributes.attribute_name)=lower(\'${attributes[i]}\')`;
+      // HACK > 'true' OR not 'no' to include WiFi attribute
+      attributesQuery += ` and (attributes.attribute_value = \'true\' or attributes.attribute_value != \'no\'))`;
+      tok = " or ";
+    }
+    attributesQuery = `(${attributesQuery})`;
+  }
+
+  return attributesQuery;
+}
+
 /**
  * Return SQL query string S inside object { text: S }.
  * @param {state: '', city: '', zipcode: '', categories: []} queryObj 
@@ -53,7 +111,7 @@ function getCategoriesSQLString(queryObj)
  */
 function getSQLQuery(queryObj, selection, orderBy)
 {
-  var categories, result, categoriesQuery, priceQuery;
+  var categories, result, categoriesQuery, priceQuery, attributesQuery, mealsQuery;
 
   result = getCategoriesSQLString(queryObj);
   categories = result[0];
@@ -68,7 +126,34 @@ function getSQLQuery(queryObj, selection, orderBy)
   }
 
   // get meals portion of query
-  // breakfast, brunch, dessert, dinner, lunch, 
+  if (queryObj['meals']) {
+    if (queryObj['meals'] === 'all') {
+      queryObj = {
+        ...queryObj,
+        'meals': 'breakfast,brunch,dessert,dinner,lunch,latenight',
+      };
+    }
+    mealsQuery = getAttributesSQLString(queryObj, 'meals');
+    mealsQuery = 'and ' + mealsQuery;   // prepend an 'and '
+  } else {
+    mealsQuery = '';
+  }
+
+  // get attributes portion of query
+  if (queryObj['attributes']) {
+    if (queryObj['attributes'] === 'all') {
+      queryObj = {
+        ...queryObj,
+        'attributes': 'BusinessAcceptsCreditCards,RestaurantsReservations,WheelchairAccessible,' +
+        'OutdoorSeating,GoodForKids,RestaurantsGoodForGroups,RestaurantsDelivery,' + 
+        'RestaurantsTakeOut,WiFi,BikeParking',
+      };
+    }
+    attributesQuery = getAttributesSQLString(queryObj, 'attributes');
+    attributesQuery = 'and ' + attributesQuery;   // prepend an 'and '
+  } else {
+    attributesQuery = '';
+  }
 
   const query = {
     text: `SELECT DISTINCT ${selection} \
@@ -78,10 +163,13 @@ function getSQLQuery(queryObj, selection, orderBy)
         ${(queryObj['city']) ? ' and business_city=\'' + queryObj['city'] + '\'' : ''}\
         ${(queryObj['zipcode']) ? ' and postal_code=' + queryObj['zipcode'] : ''}\
         ${priceQuery}\
-        ${(categoriesQuery && orderBy !== 'category_name') ? ' and ' + categoriesQuery + ' GROUP BY business.business_id, business_name, business_address, business_city, business_state \
-        HAVING COUNT (*) >= ' + categories.length: ''}\
+        ${(categoriesQuery && orderBy !== 'category_name') ? ' and ' + categoriesQuery: ''}\
+        ${attributesQuery}\
+        ${mealsQuery}\
         ${(orderBy === '') ? '' : 'ORDER BY ' + orderBy}`,
   }
+
+  console.log(query)
 
   return query;
 }
@@ -194,8 +282,8 @@ const getPricesFlexible = (request, response) => {
 }
 
 const getAttributesFlexible = (request, response) => {
-  if (!request.query['meals']) request.query['meals'] = 'all';
-  const query = getSQLQuery(request.query, 'category_name', 'category_name');
+  if (!request.query['attributes']) request.query['attributes'] = 'all';
+  const query = getSQLQuery(request.query, 'attribute_name', 'attribute_name');
   console.log(query)
 
   pool.query(query, (error, results) => {
@@ -207,7 +295,8 @@ const getAttributesFlexible = (request, response) => {
 }
 
 const getMealsFlexible = (request, response) => {
-  const query = getSQLQuery(request.query, 'category_name', 'category_name');
+  if (!request.query['meals']) request.query['meals'] = 'all';
+  const query = getSQLQuery(request.query, 'attribute_name', 'attribute_name');
   console.log(query)
 
   pool.query(query, (error, results) => {
