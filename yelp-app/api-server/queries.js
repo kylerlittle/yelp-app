@@ -67,7 +67,7 @@ function getCategoriesSQLString(queryObj)
 
     for (i = 0, tok = ""; i < categories.length; i++){
       categoriesQuery += `${tok}lower(categories.category_name)=lower(\'${categories[i]}\')`;
-      tok = " and ";
+      tok = " or ";
     }
     // categoriesQuery = `(${categoriesQuery})`;
   }
@@ -183,44 +183,71 @@ function getSQLQuery(queryObj, selection, orderBy, businessSearchFlag)
     attributesQuery = '';
   }
 
-  var groupByClause = "", countRequired = 0;
+  var groupByClause = "", attrCountRequired = 0, categoryCountRequired = 0;
   if (businessSearchFlag) {
     // need a group by clause
     if (queryObj['meals'] || queryObj['attributes'] || (categoriesQuery && orderBy !== 'category_name')) {
       groupByClause += ' GROUP BY business.business_id, business_name, business_address, business_city, business_state, postal_code ';
 
       if (queryObj['meals']) {
-        countRequired += meals.length;
+        attrCountRequired += meals.length;
       }
 
       if (queryObj['attributes']) {
-        countRequired += attributes.length;
+        attrCountRequired += attributes.length;
+      }
+
+      if (queryObj['attributes'] || queryObj['meals']) {
+        groupByClause += `HAVING COUNT(*) = ${attrCountRequired}`
       }
 
       if (categoriesQuery && orderBy !== 'category_name') {
-        countRequired += categories.length;
+        categoryCountRequired += categories.length;
+        groupByClause += `HAVING COUNT(*) = ${categoryCountRequired}`
       }
-      groupByClause += `HAVING COUNT(*) = ${countRequired}`
     }
   }
 
-  groupedQueryString = groupQueryParamsThatAreListsWithOr([categoriesQuery, attributesQuery, mealsQuery])
-  console.log(`TEST: ${groupedQueryString}`)
+  var groupedAttributeQueryString = groupQueryParamsThatAreListsWithOr([attributesQuery, mealsQuery]);
+  var groupedCategoryQueryString = groupQueryParamsThatAreListsWithOr([categoriesQuery]);
 
-  const query = {
-    text: `SELECT DISTINCT ${selection} \
+  const attributes_query = {
+    text: `SELECT DISTINCT ${selection}\
       FROM business, attributes\
       WHERE business.business_id = attributes.business_id and\
         ${(queryObj['state']) ? ' and business_state=UPPER(\'' + queryObj['state'] + '\')' : ''}\
         ${(queryObj['city']) ? ' and business_city=\'' + queryObj['city'] + '\'' : ''}\
         ${(queryObj['zipcode']) ? ' and postal_code=' + queryObj['zipcode'] : ''}\
         ${priceQuery}\
-        ${groupedQueryString}\
+        ${groupedAttributeQueryString}\
         ${groupByClause}\
         ${(orderBy === '') ? '' : 'ORDER BY ' + orderBy}`,
   }
 
-  return query;
+  const categories_query = {
+    text: `SELECT DISTINCT ${selection}\
+      FROM business, categories\
+      WHERE business.business_id = categories.business_id and\
+        ${(queryObj['state']) ? ' and business_state=UPPER(\'' + queryObj['state'] + '\')' : ''}\
+        ${(queryObj['city']) ? ' and business_city=\'' + queryObj['city'] + '\'' : ''}\
+        ${(queryObj['zipcode']) ? ' and postal_code=' + queryObj['zipcode'] : ''}\
+        ${priceQuery}\
+        ${groupedCategoryQueryString}\
+        ${groupByClause}\
+        ${(orderBy === '') ? '' : 'ORDER BY ' + orderBy}`,
+  }
+
+  // need to combine
+  if ((queryObj['attributes'] || queryObj['meals']) && (categoriesQuery && orderBy !== 'category_name')) {
+    return {
+      text: `SELECT * FROM ${'(' + categories_query['text'] + ') as C INNER JOIN'}\
+            ${'(' + attributes_query['text'] + ') as A ON C.business_id = A.business_id' }`
+    };
+  } else if (queryObj['attributes'] || queryObj['meals']) {
+    return attributes_query;
+  } else {
+    return categories_query;
+  }
 }
 
 /**
@@ -423,7 +450,24 @@ having count(attribute_id) = length
 
 select distinct bus id where attr
 
-MUST COUNT ONLY THOSE THAT SATISFY CONDITION!
+probably the issue:
+3-way join will do the cross product... which is way more than we need
+i.e.
+pizza       |    lunch
+            |    dinner
+pizza is matched up twice here. So count(*) will be 4 instead of 3...
+I guess this means we probably need to update the group by clause...
+or somehow compare count(*) = attributes.length * categories.length
+actually it's matching up EVERYTHING... not just the attributes I want matched.
+
+so it's actually attributes.length * numCategories for that attribute... yikes. exactly what I thought
+4 *
+
+maybe not use the count
+
+What if I just did these queries separately and then intersected them? lol
+
+SELECT * FROM ((SELECT * FROM business) as S1 INNER JOIN (SELECT * FROM business) as S2 ON S1.business_id = S2.business_id);
 
 
 *TEST*
