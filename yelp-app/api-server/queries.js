@@ -183,11 +183,12 @@ function getSQLQuery(queryObj, selection, orderBy, businessSearchFlag)
     attributesQuery = '';
   }
 
-  var groupByClause = "", attrCountRequired = 0, categoryCountRequired = 0;
+  var attrGroupByClause = "", categoryGroupByClause = "", attrCountRequired = 0, categoryCountRequired = 0;
   if (businessSearchFlag) {
     // need a group by clause
     if (queryObj['meals'] || queryObj['attributes'] || (categoriesQuery && orderBy !== 'category_name')) {
-      groupByClause += ' GROUP BY business.business_id, business_name, business_address, business_city, business_state, postal_code ';
+      attrGroupByClause += ' GROUP BY business.business_id, business_name, business_address, business_city, business_state, postal_code ';
+      categoryGroupByClause = attrGroupByClause;
 
       if (queryObj['meals']) {
         attrCountRequired += meals.length;
@@ -198,12 +199,12 @@ function getSQLQuery(queryObj, selection, orderBy, businessSearchFlag)
       }
 
       if (queryObj['attributes'] || queryObj['meals']) {
-        groupByClause += `HAVING COUNT(*) = ${attrCountRequired}`
+        attrGroupByClause += `HAVING COUNT(*) = ${attrCountRequired}`
       }
 
       if (categoriesQuery && orderBy !== 'category_name') {
         categoryCountRequired += categories.length;
-        groupByClause += `HAVING COUNT(*) = ${categoryCountRequired}`
+        categoryGroupByClause += `HAVING COUNT(*) = ${categoryCountRequired}`
       }
     }
   }
@@ -220,7 +221,7 @@ function getSQLQuery(queryObj, selection, orderBy, businessSearchFlag)
         ${(queryObj['zipcode']) ? ' and postal_code=' + queryObj['zipcode'] : ''}\
         ${priceQuery}\
         ${groupedAttributeQueryString}\
-        ${groupByClause}\
+        ${attrGroupByClause}\
         ${(orderBy === '') ? '' : 'ORDER BY ' + orderBy}`,
   }
 
@@ -233,7 +234,7 @@ function getSQLQuery(queryObj, selection, orderBy, businessSearchFlag)
         ${(queryObj['zipcode']) ? ' and postal_code=' + queryObj['zipcode'] : ''}\
         ${priceQuery}\
         ${groupedCategoryQueryString}\
-        ${groupByClause}\
+        ${categoryGroupByClause}\
         ${(orderBy === '') ? '' : 'ORDER BY ' + orderBy}`,
   }
 
