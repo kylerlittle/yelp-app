@@ -93,8 +93,8 @@ function getAttributesSQLString(queryObj, attributeType)
 
     for (i = 0, tok = ""; i < attributes.length; i++){
       attributesQuery += `${tok}lower(attributes.attribute_name)=lower(\'${attributes[i]}\')`;
-      // HACK > 'true' OR not 'no' to include WiFi attribute
-      attributesQuery += ` and (attributes.attribute_value = \'true\' or attributes.attribute_value != \'no\')`;
+      // HACK > 'true' OR 'free' or 'paid'
+      attributesQuery += ` and (attributes.attribute_value = \'true\' or attributes.attribute_value = \'free\' or attributes.attribute_value = \'paid\')`;
       tok = " or ";
     }
     attributesQuery = `(${attributesQuery})`;
@@ -399,6 +399,11 @@ problem: multiple entries in attributes where this is true...
 
 thus for all of them to be true, need count >= categories.length + .length + .length
 for some reason this is still wrong tho
+having count(attribute_id) = length
+
+select distinct bus id where attr
+
+MUST COUNT ONLY THOSE THAT SATISFY CONDITION!
 
 
 *TEST*
@@ -409,6 +414,11 @@ RestaurantsTakeOut
 BusinessAcceptsCreditCards
 RestaurantsDelivery
 NOT wifi
+
+fuck.
+true or not equal to no
+
+equal to true or equal to 'free' or equal to 'paid'
 
 lunch
 NOT dinner
