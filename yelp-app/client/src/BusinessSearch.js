@@ -81,6 +81,7 @@ class BusinessSearch extends Component {
             returnedObj.forEach(element => {
                 returnedSelectedCategoryList.push(Object.values(element)[0])
             });
+            console.log(returnedObj)
             this.setState({
                 ...this.state,
                 selectedCategory: selectedCategory,
