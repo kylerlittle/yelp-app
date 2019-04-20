@@ -143,13 +143,11 @@ class UserPageModal extends Component {
      * Set favorite businesses list.
      */
     Client.getFavoriteBusinesses(userID, (businesses) =>{
-      if (businesses) {
         this.setState({
           ...this.state,
-          favoriteBusinesses: businesses,
+          favoriteBusinesses: (businesses) ? businesses : [],
         });
         console.log(this.state.favoriteBusinesses);
-      }
     });
   }
 
