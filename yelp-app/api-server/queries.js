@@ -19,36 +19,6 @@ const pool = new Pool({
  */
 const crypto = require("crypto");
 
-/**
- * Define the attributes which for Meals
- * which the user can filter by from the frontend
- */
-const mealAttributes = new Set(
-  'breakfast', 
-  'brunch',
-  'dessert',
-  'dinner',
-  'lunch',
-  'latenight',
-);
-
-/**
- * Define the attributes which the user can filter by
- * from the frontend
- */
-const filterableAttributes = new Set(
-  'BusinessAcceptsCreditCards', 
-  'RestaurantsReservations',
-  'WheelchairAccessible',
-  'OutdoorSeating',
-  'GoodForKids',
-  'RestaurantsGoodForGroups',
-  'RestaurantsDelivery',
-  'RestaurantsTakeOut',
-  'WiFi',
-  'BikeParking',
-);
-
 function getCategoriesSQLString(queryObj)
 {
   var categories;
@@ -125,9 +95,8 @@ function groupQueryParamsThatAreListsWithOr(listOfQueryStrings)
  * @param {state: '', city: '', zipcode: '', categories: []} queryObj 
  * @param {string} selection 
  * @param {string} orderBy 
- * @param {boolean} businessSearchFlag 
  */
-function getSQLQuery(queryObj, selection, orderBy, businessSearchFlag)
+function getSQLQuery(queryObj, selection, orderBy)
 {
   var result, categories, categoriesQuery, priceQuery, attributes,
     attributesQuery, meals, mealsQuery, allCatsFlag = false;
@@ -186,32 +155,28 @@ function getSQLQuery(queryObj, selection, orderBy, businessSearchFlag)
 
   var attrGroupByClause = "", categoryGroupByClause = "", attrCountRequired = 0, categoryCountRequired = 0;
 
-  if (businessSearchFlag) {
-    // need a group by clause
-    if (queryObj['meals'] || queryObj['attributes'] || queryObj['price'] || (categoriesQuery && orderBy !== 'category_name')) {
-      attrGroupByClause += ' GROUP BY business.business_id, business_name, business_address, business_city, business_state, postal_code ';
-      categoryGroupByClause = attrGroupByClause;
+  // need a group by clause
+  if (queryObj['meals'] || queryObj['attributes'] || queryObj['price'] || (categoriesQuery && orderBy !== 'category_name')) {
+    attrGroupByClause += ` GROUP BY ${selection} `;
+    categoryGroupByClause = attrGroupByClause;
 
+    if (queryObj['attributes'] || queryObj['meals'] || queryObj['price']) {
       if (queryObj['meals']) {
         attrCountRequired += meals.length;
       }
-
+  
       if (queryObj['attributes']) {
         attrCountRequired += attributes.length;
       }
-
+  
       if (queryObj['price']) {
         attrCountRequired += 1;
       }
-
-      if (queryObj['attributes'] || queryObj['meals'] || queryObj['price']) {
-        attrGroupByClause += `HAVING COUNT(*) = ${attrCountRequired}`
-      }
-
-      if (categoriesQuery && orderBy !== 'category_name') {
-        categoryCountRequired += categories.length;
-        categoryGroupByClause += `HAVING COUNT(*) = ${categoryCountRequired}`
-      }
+      attrGroupByClause += `HAVING COUNT(*) = ${attrCountRequired}`
+    }
+    else if (categoriesQuery && orderBy !== 'category_name') {
+      categoryCountRequired += categories.length;
+      categoryGroupByClause += `HAVING COUNT(*) = ${categoryCountRequired}`
     }
   }
 
@@ -242,7 +207,6 @@ function getSQLQuery(queryObj, selection, orderBy, businessSearchFlag)
         ${(orderBy === '') ? '' : 'ORDER BY ' + orderBy}`,
   }
 
-  console.log(`category query str: ${categoriesQuery}`)
   // Combine the two queries with a subquery
   if ((queryObj['attributes'] || queryObj['meals'] || queryObj['price']) && (categoriesQuery && orderBy !== 'category_name')) {
     return {
@@ -319,7 +283,24 @@ const getBusinesses = (request, response) => {
 };
 
 const getStatesFlexible = (request, response) => {
-  const query = getSQLQuery(request.query, 'business_state', 'business_state', false);
+  var city = "", zipcode = "", flag = false;
+  if (request.query['city']) {
+    city = `WHERE business_city='${request.query['city']}'`
+    flag = true;
+  }
+  if (request.query['zipcode']) {
+    zipcode = `postal_code='${request.query['zipcode']}'`
+    if (flag) zipcode = ' and ' + zipcode;
+    else zipcode = ' WHERE ' + zipcode;
+  }
+
+  const query = {
+    text: `SELECT DISTINCT business_state\
+      FROM business\
+        ${city}\
+        ${zipcode}\
+        ORDER BY business_state`,
+  }
   console.log(query)
 
   pool.query(query, (error, results) => {
@@ -331,7 +312,24 @@ const getStatesFlexible = (request, response) => {
 }
 
 const getCitiesFlexible = (request, response) => {
-  const query = getSQLQuery(request.query, 'business_city', 'business_city', false);
+  var state = "", zipcode = "", flag = false;
+  if (request.query['state']) {
+    state = `WHERE business_state=UPPER('${request.query['state']}')`
+    flag = true;
+  }
+  if (request.query['zipcode']) {
+    zipcode = `postal_code='${request.query['zipcode']}'`
+    if (flag) zipcode = ' and ' + zipcode;
+    else zipcode = ' WHERE ' + zipcode;
+  }
+
+  const query = {
+    text: `SELECT DISTINCT business_city\
+      FROM business\
+        ${state}\
+        ${zipcode}\
+        ORDER BY business_city`,
+  }
   console.log(query)
 
   pool.query(query, (error, results) => {
@@ -343,7 +341,24 @@ const getCitiesFlexible = (request, response) => {
 }
 
 const getZipcodesFlexible = (request, response) => {
-  const query = getSQLQuery(request.query, 'postal_code', 'postal_code', false);
+  var state = "", city = "", flag = false;
+  if (request.query['state']) {
+    state = `WHERE business_state=UPPER('${request.query['state']}')`
+    flag = true;
+  }
+  if (request.query['city']) {
+    city = `business_city='${request.query['city']}'`
+    if (flag) city = ' and ' + city;
+    else city = ' WHERE ' + city;
+  }
+
+  const query = {
+    text: `SELECT DISTINCT postal_code\
+      FROM business\
+        ${state}\
+        ${city}\
+        ORDER BY postal_code`,
+  }
   console.log(query)
 
   pool.query(query, (error, results) => {
@@ -374,18 +389,18 @@ const getCategories = (request, response) => {
   })
 }
 
-const getCategoriesFlexible = (request, response) => {
-  if (!request.query['categories']) request.query['categories'] = 'all';
-  const query = getSQLQuery(request.query, 'category_name', 'category_name', false);
-  console.log(query)
+// const getCategoriesFlexible = (request, response) => {
+//   if (!request.query['categories']) request.query['categories'] = 'all';
+//   const query = getSQLQuery(request.query, 'category_name', 'category_name', false);
+//   console.log(query)
 
-  pool.query(query, (error, results) => {
-    if (error) {
-      throw error
-    }
-    response.status(200).json(results.rows)
-  })
-}
+//   pool.query(query, (error, results) => {
+//     if (error) {
+//       throw error
+//     }
+//     response.status(200).json(results.rows)
+//   })
+// }
 
 const getPrices = (request, response) => {
   const query = {
@@ -407,18 +422,18 @@ const getPrices = (request, response) => {
   })
 }
 
-const getPricesFlexible = (request, response) => {
-  if (!request.query['price']) request.query['price'] = 'all';
-  const query = getSQLQuery(request.query, 'attribute_value', 'attribute_value', false);
-  console.log(query)
+// const getPricesFlexible = (request, response) => {
+//   if (!request.query['price']) request.query['price'] = 'all';
+//   const query = getSQLQuery(request.query, 'attribute_value', 'attribute_value', false);
+//   console.log(query)
 
-  pool.query(query, (error, results) => {
-    if (error) {
-      throw error
-    }
-    response.status(200).json(results.rows)
-  })
-}
+//   pool.query(query, (error, results) => {
+//     if (error) {
+//       throw error
+//     }
+//     response.status(200).json(results.rows)
+//   })
+// }
 
 const getAttributes = (request, response) => {
   let result, attributesQuery;
@@ -448,18 +463,18 @@ const getAttributes = (request, response) => {
   })
 }
 
-const getAttributesFlexible = (request, response) => {
-  if (!request.query['attributes']) request.query['attributes'] = 'all';
-  const query = getSQLQuery(request.query, 'attribute_name', 'attribute_name', false);
-  console.log(query)
+// const getAttributesFlexible = (request, response) => {
+//   if (!request.query['attributes']) request.query['attributes'] = 'all';
+//   const query = getSQLQuery(request.query, 'attribute_name', 'attribute_name', false);
+//   console.log(query)
 
-  pool.query(query, (error, results) => {
-    if (error) {
-      throw error
-    }
-    response.status(200).json(results.rows)
-  })
-}
+//   pool.query(query, (error, results) => {
+//     if (error) {
+//       throw error
+//     }
+//     response.status(200).json(results.rows)
+//   })
+// }
 
 const getMeals = (request, response) => {
   let result, mealsQuery;
@@ -487,18 +502,18 @@ const getMeals = (request, response) => {
   })
 }
 
-const getMealsFlexible = (request, response) => {
-  if (!request.query['meals']) request.query['meals'] = 'all';
-  const query = getSQLQuery(request.query, 'attribute_name', 'attribute_name', false);
-  console.log(query)
+// const getMealsFlexible = (request, response) => {
+//   if (!request.query['meals']) request.query['meals'] = 'all';
+//   const query = getSQLQuery(request.query, 'attribute_name', 'attribute_name', false);
+//   console.log(query)
 
-  pool.query(query, (error, results) => {
-    if (error) {
-      throw error
-    }
-    response.status(200).json(results.rows)
-  })
-}
+//   pool.query(query, (error, results) => {
+//     if (error) {
+//       throw error
+//     }
+//     response.status(200).json(results.rows)
+//   })
+// }
 
 const getReviews = (request, response) => {
   const business_id = request.params.businessID;
@@ -545,43 +560,9 @@ module.exports = {
   getCitiesFlexible,
   getZipcodesFlexible,
   getCategories,
-  getCategoriesFlexible,
   getPrices,
-  getPricesFlexible,
   getAttributes,
-  getAttributesFlexible,
   getMeals,
-  getMealsFlexible,
   getReviews,
   postReview,
 };
-
-
-/*
-*** TEST CASE ***
-HRFJlSAP_EBU_MpPPmpUDQ
-has...
-
-RestaurantsTakeOut
-BusinessAcceptsCreditCards
-RestaurantsDelivery
-NOT wifi
-
-lunch
-NOT dinner
-
-pizza
-restaurants
-NOT beer
-
-TODOs
-- hardcode:
-    - getMeals                ==> replace getMealsFlexible
-    - getPricesFlexible       ==> ...
-    - getCategoriesFlexible   ==> ...
-    - getAttributesFlexible   ==> ...
-- display more attributes on frontend
-- sort attributes
-    - pass in query parameter ==> sorted=sortingMethod
-
-*/
