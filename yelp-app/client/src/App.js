@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import logo from './logo.png';
 import './App.css';
-import BusinessSearch from './BusinessSearch';
+import QueryBuilder from './QueryBuilder';
+import UserPageModal from './userpage/UserPageModal';
 
 class App extends Component {
   constructor(props) {
@@ -19,9 +20,8 @@ class App extends Component {
           <h1>Team CraKeN's Yelp App</h1>
           <img src={logo} className="App-logo" alt="logo" />
         </header>
-        <BusinessSearch
-          userID={this.state.user_id}
-        />
+        <QueryBuilder/>
+        <UserPageModal/>
       </div>
     );
   }

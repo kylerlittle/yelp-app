@@ -1,0 +1,8 @@
+.FriendsList {
+    overflow-y: scroll;
+    overflow-x: hidden;
+    height: 92%;
+    width: 98%;
+    position: absolute;
+    right: 0;
+}

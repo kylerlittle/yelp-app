@@ -61,6 +61,11 @@ app.use(
  *      POST -- /api/reviews/:businessID
  *         ==> Body of form {user_id: "...", review_text: "", stars_given: 5}
  *         ==> Unique review_id should be generated
+ *      GET -- /api/users/:userID
+ *      GET -- /api/friends/:userID
+ *      GET -- /api/friendsreviews/:userID
+ *      DELETE -- /api/favorite/:businessID/user/:userID
+ *      GET -- /api/userfavorites/:userID
  */
 app.get('/api/businesses', db.getBusinesses);
 app.get('/api/states', db.getStatesFlexible);
@@ -72,6 +77,11 @@ app.get('/api/attributes', db.getAttributes);
 app.get('/api/meals', db.getMeals);
 app.get('/api/reviews/:businessID', db.getReviews);
 app.post('/api/reviews/:businessID', db.postReview);
+app.get('/api/users/:userID', db.getUser);
+app.get('/api/friends/:userID', db.getFriends);
+app.get('/api/friendsreviews/:userID', db.getFriendsReviews);
+app.delete('/api/favorite/:businessID/user/:userID', db.deleteFavoriteBusiness);
+app.get('/api/userfavorites/:userID', db.getFavoriteBusinesses);
 
 /**
  * List on port specified at top of file.

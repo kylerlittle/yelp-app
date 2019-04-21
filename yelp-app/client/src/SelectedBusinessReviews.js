@@ -17,6 +17,8 @@ class SelectedBusinessReviews extends Component {
                 starRatedColor={'red'}
             />
             <br />
+            {review['business_name']}
+            <br />
             {`${date_written.getMonth() + 1}/${date_written.getDate()}/${date_written.getFullYear()}`}
             <br />
             {review['review_text']}

@@ -554,6 +554,102 @@ const postReview = (request, response) => {
   })
 }
 
+const getUser = (request, response) => {
+  const user_id = request.params.userID;
+  const query = {
+    text: 'SELECT * \
+      FROM yelpuser \
+      WHERE user_id=$1',
+    values: [user_id],
+  };
+  pool.query(query, (error, results) => {
+    if (error) {
+      throw error;
+    }
+    response.status(200).json(results.rows);
+  });
+}
+
+const getFriends = (request, response) => {
+  const user_id = request.params.userID;
+  const query = {
+    text: 'SELECT * \
+      FROM yelpuser, friendswith \
+      WHERE friendswith.owner_of_friend_list=$1 and \
+            friendswith.on_friend_list=yelpuser.user_id',
+    values: [user_id],
+  };
+  pool.query(query, (error, results) => {
+    if (error) {
+      throw error;
+    }
+    response.status(200).json(results.rows);
+  });
+}
+
+/* Get most recent review of each friend */
+const getFriendsReviews = (request, response) => {
+  const user_id = request.params.userID;
+  const query = {
+    text: 'SELECT U.user_id, U.user_name, B.business_name, R.business_id, \
+                  R.review_id, R.cool, R.funny, R.useful, \
+                  R.stars_given, R.date_written, R.review_text \
+          FROM friendswith as FW, review as R, yelpuser as U, business as B \
+          WHERE FW.owner_of_friend_list=$1 and \
+                FW.on_friend_list=R.user_id and \
+                R.user_id = U.user_id and \
+                R.business_id = B.business_id and \
+                R.date_written >= \
+                  (SELECT MAX(R2.date_written) \
+                  FROM review as R2 \
+                  WHERE R2.user_id=R.user_id)',
+    values: [user_id],
+  };
+  pool.query(query, (error, results) => {
+    if (error) {
+      throw error;
+    }
+    response.status(200).json(results.rows);
+  });
+}
+
+/* Delete business from user's favorites list */
+const deleteFavoriteBusiness = (request, response) => {
+  const user_id = request.params.userID;
+  const business_id = request.params.businessID;
+  const query = {
+    text: 'DELETE FROM favorite \
+           WHERE user_id=$1 and business_id=$2',
+    values: [user_id, business_id],
+  };
+  pool.query(query, (error, results) => {
+    if (error) {
+      throw error;
+    }
+    response.status(200).json({status: 'Delete successful!',});
+  });
+}
+
+/* Get all favorite businesses of a user */
+const getFavoriteBusinesses = (request, response) => {
+  const user_id = request.params.userID;
+  const query = {
+    text: 'SELECT B.business_id, B.business_name, \
+          B.business_address, B.business_city, \
+          B.business_state, B.average_stars \
+          FROM favorite as F, business as B \
+          WHERE F.user_id=$1 and \
+                F.business_id=B.business_id',
+    values: [user_id],
+  };
+  pool.query(query, (error, results) => {
+    if (error) {
+      throw error;
+    }
+    response.status(200).json(results.rows);
+  });
+}
+
 module.exports = {
   getBusinesses,
   getStatesFlexible,
@@ -565,4 +661,9 @@ module.exports = {
   getMeals,
   getReviews,
   postReview,
+  getUser,
+  getFriends,
+  getFriendsReviews,
+  deleteFavoriteBusiness,
+  getFavoriteBusinesses
 };

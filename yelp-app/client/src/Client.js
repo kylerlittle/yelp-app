@@ -78,6 +78,62 @@ function postReview(businessID, review_info, callback) {
   .then(callback)
 }
   
+function getUserInfo(userID, callback) {
+  if (userID) {
+    return fetch(`/api/users/${userID}`, {
+      accept: "application/json"
+    })
+    .then(checkStatus)
+    .then(parseJSON)
+    .then(callback);
+  }
+}
+
+function getUserFriends(userID, callback) {
+  if (userID) {
+    return fetch(`/api/friends/${userID}`, {
+      accept: "application/json"
+    })
+    .then(checkStatus)
+    .then(parseJSON)
+    .then(callback);
+  }
+}
+
+function getFriendsReviews(userID, callback) {
+  if (userID) {
+    return fetch(`/api/friendsreviews/${userID}`, {
+      accept: "application/json"
+    })
+    .then(checkStatus)
+    .then(parseJSON)
+    .then(callback);
+  }
+}
+
+function getFavoriteBusinesses(userID, callback) {
+  if (userID) {
+    return fetch(`/api/userfavorites/${userID}`, {
+      accept: "application/json"
+    })
+    .then(checkStatus)
+    .then(parseJSON)
+    .then(callback);
+  }
+}
+
+function deleteFavoriteBusinesses(userID, businessID, callback) {
+  if (userID && businessID) {
+    return fetch(`/api/favorite/${businessID}/user/${userID}`, {
+      method: "DELETE",
+      accept: "application/json"
+    })
+    .then(checkStatus)
+    .then(parseJSON)
+    .then(callback);
+  }
+}
+
 function checkStatus(response) {
   if (response.status >= 200 && response.status < 300) {
     return response;
@@ -98,5 +154,10 @@ const Client = {
   getSelectedBusinessReviews,
   searchBusinesses,
   postReview,
+  getUserInfo,
+  getUserFriends,
+  getFriendsReviews,
+  getFavoriteBusinesses,
+  deleteFavoriteBusinesses
 };
 export default Client;
