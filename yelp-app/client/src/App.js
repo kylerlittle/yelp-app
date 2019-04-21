@@ -19,9 +19,11 @@ class App extends Component {
         <header className="App-header">
           <h1>Team CraKeN's Yelp App</h1>
           <img src={logo} className="App-logo" alt="logo" />
+          <div id="userPageModalButton">
+            <UserPageModal/>
+          </div>
         </header>
         <BusinessSearch/>
-        <UserPageModal/>
       </div>
     );
   }
