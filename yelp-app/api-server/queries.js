@@ -271,7 +271,8 @@ function getSQLQuery(queryObj, selection, orderBy)
 
 const getBusinesses = (request, response) => {
   const query = getSQLQuery(request.query, 'business.business_id, business_name,\
-   business_address, business_city, business_state, postal_code', 'business_name', true);
+   business_address, business_city, business_state, postal_code, average_stars,\
+   review_rating, num_checkins, review_count', 'business_name');
   console.log(query)
 
   pool.query(query, (error, results) => {
@@ -665,5 +666,5 @@ module.exports = {
   getFriends,
   getFriendsReviews,
   deleteFavoriteBusiness,
-  getFavoriteBusinesses
+  getFavoriteBusinesses,
 };

@@ -112,7 +112,17 @@ class BusinessSearch extends Component {
 
     Client.searchBusinesses(newSelectedQueryAttributes, (businesses) => {
         businesses.forEach(element => {
-            actualBusinessList.push({'name': element['business_name'], 'id': element['business_id']})
+            actualBusinessList.push({
+                'name': element['business_name'],
+                'id': element['business_id'],
+                'address': element['business_address'],
+                'city': element['business_city'],
+                'state': element['business_state'],
+                'stars': element['average_stars'],
+                'review_rating': element['review_rating'],
+                'num_checkins': element['num_checkins'],
+                'review_count': element['review_count'],
+            })
         });
         this.setState({
             ...this.state,
@@ -178,14 +188,9 @@ class BusinessSearch extends Component {
             <Col lg={4}>
                 <FilterSelector handleSelect={this.fillFilterSelectorChoices.bind(this)} />
             </Col>
-            <Col lg={4}>
+            <Col lg={8}>
                 <h5>
                     Query Box
-                </h5>
-            </Col>
-            <Col lg={4}>
-                <h5>
-                    Matching Businesses
                 </h5>
             </Col>
         </Row>
@@ -202,13 +207,28 @@ class BusinessSearch extends Component {
                     />
                 </Element>
             </Col>
-            <Col lg={4}>
+            <Col lg={8}>
+            <Element className="element" id="containerElement" style={{
+                position: 'relative',
+                height: '60vh',
+                overflow: 'scroll',
+                }}>
                 <QueryBox selectedQueryAttributes={this.state.selectedQueryAttributes} />
+            </Element>
             </Col>
-            <Col lg={4}>
-                <Element className="element" id="containerElement" style={{
+        </Row>
+        <Row>
+            <Col>
+            <h5>
+                Matching Businesses
+            </h5>
+            </Col>
+        </Row>
+        <Row>
+            <Col>
+            <Element className="element" id="containerElement" style={{
                     position: 'relative',
-                    height: '60vh',
+                    height: '80vh',
                     overflow: 'scroll',
                 }}>
                     <MatchingBusinesses
