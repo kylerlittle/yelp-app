@@ -42,7 +42,55 @@ class MatchingBusinesses extends Component {
         </Choice>
     );
     return (
-        <ul className="MatchingBusinessesList">{formattedList}</ul>
+        <ul className="MatchingBusinessesList">
+        <Choice>
+          <Container>
+            <Row>
+              <Col>
+              <h6 style={{color: 'red'}}>
+              {'Name'}
+              </h6>
+              </Col>
+              <Col>
+              <h6>
+              {'Address'}
+              </h6>
+              </Col>
+              <Col>
+              <h6>
+              {'City'}
+              </h6>
+              </Col>
+              <Col>
+              <h6>
+              {'State'}
+              </h6>
+              </Col>
+              <Col>
+              <h6>
+              {'Avg. Stars'}
+              </h6>
+              </Col>
+              <Col>
+              <h6>
+              {'Avg. Rating'}
+              </h6>
+              </Col>
+              <Col>
+              <h6>
+              {'Total CheckIns'}
+              </h6>
+              </Col>
+              <Col>
+              <h6>
+              {'Total Reviews'}
+              </h6>
+              </Col>
+            </Row>
+          </Container>
+        </Choice>
+        {formattedList}
+        </ul>
     );
   }
 }
