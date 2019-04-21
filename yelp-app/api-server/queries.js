@@ -270,9 +270,23 @@ function getSQLQuery(queryObj, selection, orderBy)
  */
 
 const getBusinesses = (request, response) => {
+  let orderBy = "";
+  if (request.query['sortby']) {
+    switch (request.query['sortby']) {
+      case "name": orderBy = "business_name"; break;
+      case "highest_stars": orderBy = "average_stars"; break;
+      case "highest_rating": orderBy = "review_rating"; break;
+      case "most_reviews": orderBy = "review_count"; break;
+      case "most_checkins": orderBy = "num_checkins"; break;
+      default: orderBy = "business_name"; break;
+    }
+  } else {
+    orderBy = "business_name";
+  }
+
   const query = getSQLQuery(request.query, 'business.business_id, business_name,\
    business_address, business_city, business_state, postal_code, average_stars,\
-   review_rating, num_checkins, review_count', 'business_name');
+   review_rating, num_checkins, review_count', orderBy);
   console.log(query)
 
   pool.query(query, (error, results) => {

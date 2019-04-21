@@ -10,6 +10,8 @@ import Container from 'react-bootstrap/Container';
 // https://www.npmjs.com/package/react-scroll
 import { Element } from 'react-scroll';
 import SelectedBusiness from './SelectedBusiness';
+import DropdownButton from 'react-bootstrap/DropdownButton';
+import Dropdown from 'react-bootstrap/Dropdown';
 
 class BusinessSearch extends Component {
   constructor(props) {
@@ -25,6 +27,7 @@ class BusinessSearch extends Component {
             categories: [],
             attributes: [],
             meals: [],
+            sortby: '',
         },
         matchingBusinesses: [],
         selectedBusiness: {
@@ -174,6 +177,37 @@ class BusinessSearch extends Component {
     })
   }
 
+  handleSelectSortingMethod(eventKey, event)
+  {
+    var actualBusinessList = [];
+
+    var newSelectedQueryAttributes = {
+        ...this.state.selectedQueryAttributes,
+        sortby: eventKey,
+    };
+
+    Client.searchBusinesses(newSelectedQueryAttributes, (businesses) => {
+        businesses.forEach(element => {
+            actualBusinessList.push({
+                'name': element['business_name'],
+                'id': element['business_id'],
+                'address': element['business_address'],
+                'city': element['business_city'],
+                'state': element['business_state'],
+                'stars': element['average_stars'],
+                'review_rating': element['review_rating'],
+                'num_checkins': element['num_checkins'],
+                'review_count': element['review_count'],
+            })
+        });
+        this.setState({
+            ...this.state,
+            selectedQueryAttributes: newSelectedQueryAttributes,
+            matchingBusinesses: actualBusinessList,
+        });
+    })
+  }
+
   render() {
     return (
         <Container fluid={true}>
@@ -217,11 +251,21 @@ class BusinessSearch extends Component {
             </Element>
             </Col>
         </Row>
+        <br></br>
         <Row>
             <Col>
             <h5>
                 Matching Businesses
             </h5>
+            </Col>
+            <Col>
+                <DropdownButton id="dropdown-basic-button" title="Sort Businesses By" onSelect={this.handleSelectSortingMethod.bind(this)}>
+                    <Dropdown.Item eventKey="name">Name</Dropdown.Item>
+                    <Dropdown.Item eventKey="highest_stars">Highest Star Rating</Dropdown.Item>
+                    <Dropdown.Item eventKey="highest_rating">Highest Review Rating</Dropdown.Item>
+                    <Dropdown.Item eventKey="most_reviews">Most Reviewed</Dropdown.Item>
+                    <Dropdown.Item eventKey="most_checkins">Most Checkins</Dropdown.Item>
+                </DropdownButton>
             </Col>
         </Row>
         <Row>
