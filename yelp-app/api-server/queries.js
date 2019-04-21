@@ -69,7 +69,6 @@ function getCategoriesSQLString(queryObj)
       categoriesQuery += `${tok}lower(categories.category_name)=lower(\'${categories[i]}\')`;
       tok = " or ";
     }
-    // categoriesQuery = `(${categoriesQuery})`;
   }
 
   return [categories, categoriesQuery];
@@ -97,7 +96,6 @@ function getAttributesSQLString(queryObj, attributeType)
       attributesQuery += ` and (attributes.attribute_value = \'true\' or attributes.attribute_value = \'free\' or attributes.attribute_value = \'paid\')`;
       tok = " or ";
     }
-    // attributesQuery = `(${attributesQuery})`;
   }
 
   return [attributes, attributesQuery];
@@ -119,7 +117,7 @@ function groupQueryParamsThatAreListsWithOr(listOfQueryStrings)
     }
   }
 
-  return `(${groupedQueries})`;
+  return (groupedQueries === '') ? "" : `(${groupedQueries})`;
 }
 
 /**
@@ -131,20 +129,25 @@ function groupQueryParamsThatAreListsWithOr(listOfQueryStrings)
  */
 function getSQLQuery(queryObj, selection, orderBy, businessSearchFlag)
 {
-  var result, categories, categoriesQuery, priceQuery, attributes, attributesQuery, meals, mealsQuery;
+  var result, categories, categoriesQuery, priceQuery, attributes,
+    attributesQuery, meals, mealsQuery, allCatsFlag = false;
 
-  // get categories query
-  result = getCategoriesSQLString(queryObj);
-  categories = result[0];
-  categoriesQuery = result[1];
-  // if (categoriesQuery && orderBy !== 'category_name') {
-  //   categoriesQuery = (categoriesQuery && orderBy !== 'category_name') ? ' and ' + categoriesQuery: '';
-  // }
+  // get categories portion of query
+  if (queryObj['categories']) {
+    if (queryObj['categories'] === 'all') {
+      categoriesQuery = "";
+      allCatsFlag = true;
+    } else {
+      result = getCategoriesSQLString(queryObj);
+      categories = [...result[0]];
+      categoriesQuery = result[1];
+    }
+  }
 
   // get price portion of query
   if (queryObj['price']) {
-    priceQuery = (queryObj['price'] !== 'all') ? ' attribute_name = \'RestaurantsPriceRange2\' and ' +
-        'attribute_value = \'' + queryObj['price'] + '\'': ' and attribute_name = \'RestaurantsPriceRange2\''
+    priceQuery = (queryObj['price'] !== 'all') ? ' (attribute_name = \'RestaurantsPriceRange2\' and ' +
+        'attribute_value = \'' + queryObj['price'] + '\')': ' (attribute_name = \'RestaurantsPriceRange2\')'
   } else {
     priceQuery = '';
   }
@@ -160,7 +163,6 @@ function getSQLQuery(queryObj, selection, orderBy, businessSearchFlag)
     result = getAttributesSQLString(queryObj, 'meals');
     meals = [ ...result[0]];
     mealsQuery = result[1];
-    // mealsQuery = 'and ' + mealsQuery;   // prepend an 'and '
   } else {
     mealsQuery = '';
   }
@@ -178,15 +180,15 @@ function getSQLQuery(queryObj, selection, orderBy, businessSearchFlag)
     result = getAttributesSQLString(queryObj, 'attributes');
     attributes = [ ...result[0]];
     attributesQuery = result[1];
-    // attributesQuery = 'and ' + attributesQuery;   // prepend an 'and '
   } else {
     attributesQuery = '';
   }
 
   var attrGroupByClause = "", categoryGroupByClause = "", attrCountRequired = 0, categoryCountRequired = 0;
+  
   if (businessSearchFlag) {
     // need a group by clause
-    if (queryObj['meals'] || queryObj['attributes'] || (categoriesQuery && orderBy !== 'category_name')) {
+    if (queryObj['meals'] || queryObj['attributes'] || queryObj['price'] || (categoriesQuery && orderBy !== 'category_name')) {
       attrGroupByClause += ' GROUP BY business.business_id, business_name, business_address, business_city, business_state, postal_code ';
       categoryGroupByClause = attrGroupByClause;
 
@@ -198,7 +200,11 @@ function getSQLQuery(queryObj, selection, orderBy, businessSearchFlag)
         attrCountRequired += attributes.length;
       }
 
-      if (queryObj['attributes'] || queryObj['meals']) {
+      if (queryObj['price']) {
+        attrCountRequired += 1;
+      }
+
+      if (queryObj['attributes'] || queryObj['meals'] || queryObj['price']) {
         attrGroupByClause += `HAVING COUNT(*) = ${attrCountRequired}`
       }
 
@@ -209,18 +215,17 @@ function getSQLQuery(queryObj, selection, orderBy, businessSearchFlag)
     }
   }
 
-  var groupedAttributeQueryString = groupQueryParamsThatAreListsWithOr([attributesQuery, mealsQuery]);
+  var groupedAttributeQueryString = groupQueryParamsThatAreListsWithOr([attributesQuery, mealsQuery, priceQuery]);
   var groupedCategoryQueryString = groupQueryParamsThatAreListsWithOr([categoriesQuery]);
 
   const attributes_query = {
     text: `SELECT DISTINCT ${selection}\
       FROM business, attributes\
-      WHERE business.business_id = attributes.business_id and\
+      WHERE business.business_id = attributes.business_id\
         ${(queryObj['state']) ? ' and business_state=UPPER(\'' + queryObj['state'] + '\')' : ''}\
         ${(queryObj['city']) ? ' and business_city=\'' + queryObj['city'] + '\'' : ''}\
         ${(queryObj['zipcode']) ? ' and postal_code=' + queryObj['zipcode'] : ''}\
-        ${priceQuery}\
-        ${groupedAttributeQueryString}\
+        ${(groupedAttributeQueryString === '') ? "" : ' and ' + groupedAttributeQueryString}\
         ${attrGroupByClause}\
         ${(orderBy === '') ? '' : 'ORDER BY ' + orderBy}`,
   }
@@ -228,26 +233,32 @@ function getSQLQuery(queryObj, selection, orderBy, businessSearchFlag)
   const categories_query = {
     text: `SELECT DISTINCT ${selection}\
       FROM business, categories\
-      WHERE business.business_id = categories.business_id and\
+      WHERE business.business_id = categories.business_id\
         ${(queryObj['state']) ? ' and business_state=UPPER(\'' + queryObj['state'] + '\')' : ''}\
         ${(queryObj['city']) ? ' and business_city=\'' + queryObj['city'] + '\'' : ''}\
         ${(queryObj['zipcode']) ? ' and postal_code=' + queryObj['zipcode'] : ''}\
-        ${priceQuery}\
-        ${groupedCategoryQueryString}\
+        ${(groupedCategoryQueryString === '') ? "" : ' and ' + groupedCategoryQueryString}\
         ${categoryGroupByClause}\
         ${(orderBy === '') ? '' : 'ORDER BY ' + orderBy}`,
   }
 
-  // need to combine
-  if ((queryObj['attributes'] || queryObj['meals']) && (categoriesQuery && orderBy !== 'category_name')) {
+  console.log(`category query str: ${categoriesQuery}`)
+  // Combine the two queries with a subquery
+  if ((queryObj['attributes'] || queryObj['meals'] || queryObj['price']) && (queryObj['categories'] && orderBy !== 'category_name')) {
     return {
       text: `SELECT * FROM ${'(' + categories_query['text'] + ') as C INNER JOIN'}\
             ${'(' + attributes_query['text'] + ') as A ON C.business_id = A.business_id' }`
     };
-  } else if (queryObj['attributes'] || queryObj['meals']) {
-    return attributes_query;
-  } else {
+  }
+  // Dealing with a query with only attributes relation
+  else if (queryObj['categories'])
+  {
     return categories_query;
+  }
+  // Dealing with a query with only categories relation
+  else
+  {
+    return attributes_query;
   }
 }
 
@@ -334,6 +345,7 @@ const getZipcodesFlexible = (request, response) => {
 }
 
 const getCategoriesFlexible = (request, response) => {
+  if (!request.query['categories']) request.query['categories'] = 'all';
   const query = getSQLQuery(request.query, 'category_name', 'category_name', false);
   console.log(query)
 
