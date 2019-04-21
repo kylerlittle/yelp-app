@@ -12,35 +12,21 @@
 
  import queryString from 'query-string';
 
-function getBusinessStates(callback) {
-  return fetch(`/api/states`, {
-    accept: "application/json"
-  })
-  .then(checkStatus)
-  .then(parseJSON)
-  .then(callback);
-}
+ function getSelectedQueryAttributeWithQueryString(selectedAttribute, query, callback) {
+  /**
+   * Convert any falsy values (or empty array -- which is truthy) to undefined so stringify handles
+   * it correctly.
+   */
+  const modifiedQuery = { ...query };
+  for (let key in query) {
+    if ((query[key] instanceof Array && query[key].length < 1) || !query[key]) {
+      modifiedQuery[key] = undefined;
+    }
+  }
 
-function getBusinessCities(state, callback) {
-  return fetch(`/api/states/${state}/cities`, {
-    accept: "application/json"
-  })
-  .then(checkStatus)
-  .then(parseJSON)
-  .then(callback);
-}
+  const stringified = queryString.stringify(modifiedQuery, {arrayFormat: 'comma'})
 
-function getBusinessZIPCodes(state, city, callback) {
-  return fetch(`/api/states/${state}/cities/${city}/zipcodes`, {
-    accept: "application/json"
-  })
-  .then(checkStatus)
-  .then(parseJSON)
-  .then(callback);
-}
-
-function getBusinessCategories(state, city, zipcode, callback) {
-  return fetch(`/api/states/${state}/cities/${city}/zipcodes/${zipcode}/categories`, {
+  return fetch(`api/${selectedAttribute + '?' + stringified}`, {
     accept: "application/json"
   })
   .then(checkStatus)
@@ -68,9 +54,8 @@ function searchBusinesses(query, callback) {
       modifiedQuery[key] = undefined;
     }
   }
-  console.log(modifiedQuery);
+
   const stringified = queryString.stringify(modifiedQuery, {arrayFormat: 'comma'})
-  console.log(stringified);
 
   return fetch(`api/businesses?${stringified}`, {
     accept: "application/json"
@@ -165,10 +150,7 @@ function parseJSON(response) {
 }
   
 const Client = {
-  getBusinessStates,
-  getBusinessCities,
-  getBusinessZIPCodes,
-  getBusinessCategories,
+  getSelectedQueryAttributeWithQueryString,
   getSelectedBusinessReviews,
   searchBusinesses,
   postReview,

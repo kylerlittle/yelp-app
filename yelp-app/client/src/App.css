@@ -32,3 +32,9 @@
     transform: rotate(360deg);
   }
 }
+
+#userPageModalButton {
+  display: inline-block;
+  margin: 0px auto;
+  width: 100%;
+}

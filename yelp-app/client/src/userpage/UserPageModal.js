@@ -168,7 +168,7 @@ class UserPageModal extends Component {
   render() {
     return (
       <>
-      <Button variant="primary" onClick={this.handleShow}>
+      <Button variant="primary" onClick={this.handleShow} style={{float: 'right', margin: '15px'}}>
         User Page
       </Button>
 
