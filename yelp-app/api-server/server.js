@@ -25,6 +25,12 @@ app.use(
  *    state="", city="", zip="", categories=["", ..., ""], price="", 
  *    meal=["", ..., ""], attribute=["", ..., ""]
  * 
+ * In general, we allow for flexibility because from the user of the API's
+ * perspective, querying for a given data type (i.e. states, cities) should
+ * depend on what other search parameters have already been used. For instance,
+ * if a user selects search parameters "city=Phoenix", and then goes to select
+ * a state, the only state available should be "Arizona" in this database.
+ * 
  *
  * Routes:
  * 
@@ -44,6 +50,10 @@ app.use(
  *      GET -- /api/zipcodes?querystring
  *          ==> Select distinct zipcodes that match query string
  *          ==> Accepts state, city, categories
+ *      GET -- /api/categories
+ *      GET -- /api/prices
+ *      GET -- /api/attributes
+ *      GET -- /api/meals
  * 
  * 
  *      *** Review Viewing & Submitting ***
@@ -56,10 +66,10 @@ app.get('/api/businesses', db.getBusinesses);
 app.get('/api/states', db.getStatesFlexible);
 app.get('/api/cities', db.getCitiesFlexible);
 app.get('/api/zipcodes', db.getZipcodesFlexible);
-app.get('/api/categories', db.getCategoriesFlexible);
-app.get('/api/prices', db.getPricesFlexible);
-app.get('/api/attributes', db.getAttributesFlexible);
-app.get('/api/meals', db.getMealsFlexible);
+app.get('/api/categories', db.getCategories);
+app.get('/api/prices', db.getPrices);
+app.get('/api/attributes', db.getAttributes);
+app.get('/api/meals', db.getMeals);
 app.get('/api/reviews/:businessID', db.getReviews);
 app.post('/api/reviews/:businessID', db.postReview);
 

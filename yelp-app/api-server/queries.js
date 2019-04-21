@@ -267,6 +267,12 @@ function getSQLQuery(queryObj, selection, orderBy, businessSearchFlag)
  *    state="", city="", zip="", categories=["", ..., ""], price="", 
  *    meal=["", ..., ""], attribute=["", ..., ""]
  * 
+ * In general, we allow for flexibility because from the user of the API's
+ * perspective, querying for a given data type (i.e. states, cities) should
+ * depend on what other search parameters have already been used. For instance,
+ * if a user selects search parameters "city=Phoenix", and then goes to select
+ * a state, the only state available should be "Arizona" in this database.
+ * 
  *
  * Routes:
  * 
@@ -286,6 +292,10 @@ function getSQLQuery(queryObj, selection, orderBy, businessSearchFlag)
  *      GET -- /api/zipcodes?querystring
  *          ==> Select distinct zipcodes that match query string
  *          ==> Accepts state, city, categories
+ *      GET -- /api/categories
+ *      GET -- /api/prices
+ *      GET -- /api/attributes
+ *      GET -- /api/meals
  * 
  * 
  *      *** Review Viewing & Submitting ***
@@ -344,9 +354,49 @@ const getZipcodesFlexible = (request, response) => {
   })
 }
 
+const getCategories = (request, response) => {
+  const query = {
+    text: `SELECT DISTINCT category_name\
+      FROM business, categories\
+      WHERE business.business_id = categories.business_id\
+        ${(request.query['state']) ? ' and business_state=UPPER(\'' + request.query['state'] + '\')' : ''}\
+        ${(request.query['city']) ? ' and business_city=\'' + request.query['city'] + '\'' : ''}\
+        ${(request.query['zipcode']) ? ' and postal_code=' + request.query['zipcode'] : ''}\
+        ORDER BY category_name`,
+  }
+  console.log(query)
+
+  pool.query(query, (error, results) => {
+    if (error) {
+      throw error
+    }
+    response.status(200).json(results.rows)
+  })
+}
+
 const getCategoriesFlexible = (request, response) => {
   if (!request.query['categories']) request.query['categories'] = 'all';
   const query = getSQLQuery(request.query, 'category_name', 'category_name', false);
+  console.log(query)
+
+  pool.query(query, (error, results) => {
+    if (error) {
+      throw error
+    }
+    response.status(200).json(results.rows)
+  })
+}
+
+const getPrices = (request, response) => {
+  const query = {
+    text: `SELECT DISTINCT attribute_value\
+      FROM business, attributes\
+      WHERE business.business_id = attributes.business_id\
+        ${(request.query['state']) ? ' and business_state=UPPER(\'' + request.query['state'] + '\')' : ''}\
+        ${(request.query['city']) ? ' and business_city=\'' + request.query['city'] + '\'' : ''}\
+        ${(request.query['zipcode']) ? ' and postal_code=' + request.query['zipcode'] : ''}\
+        and attribute_name = 'RestaurantsPriceRange2' ORDER BY attribute_value`,
+  }
   console.log(query)
 
   pool.query(query, (error, results) => {
@@ -370,9 +420,63 @@ const getPricesFlexible = (request, response) => {
   })
 }
 
+const getAttributes = (request, response) => {
+  let result, attributesQuery;
+  var queryObj;
+  queryObj = {
+    'attributes': 'BusinessAcceptsCreditCards,RestaurantsReservations,WheelchairAccessible,' +
+                  'OutdoorSeating,GoodForKids,RestaurantsGoodForGroups,RestaurantsDelivery,' + 
+                  'RestaurantsTakeOut,WiFi,BikeParking',
+  };
+  result = getAttributesSQLString(queryObj, 'attributes');
+  meals = [ ...result[0]];
+  attributesQuery = result[1];
+
+  const query = {
+    text: `SELECT DISTINCT attribute_name\
+      FROM attributes WHERE\
+      ${attributesQuery}\
+      ORDER BY attribute_name`,
+  }
+  console.log(query)
+
+  pool.query(query, (error, results) => {
+    if (error) {
+      throw error
+    }
+    response.status(200).json(results.rows)
+  })
+}
+
 const getAttributesFlexible = (request, response) => {
   if (!request.query['attributes']) request.query['attributes'] = 'all';
   const query = getSQLQuery(request.query, 'attribute_name', 'attribute_name', false);
+  console.log(query)
+
+  pool.query(query, (error, results) => {
+    if (error) {
+      throw error
+    }
+    response.status(200).json(results.rows)
+  })
+}
+
+const getMeals = (request, response) => {
+  let result, mealsQuery;
+  var queryObj;
+  queryObj = {
+    'meals': 'breakfast,brunch,dessert,dinner,lunch,latenight',
+  };
+  result = getAttributesSQLString(queryObj, 'meals');
+  meals = [ ...result[0]];
+  mealsQuery = result[1];
+
+  const query = {
+    text: `SELECT DISTINCT attribute_name\
+      FROM attributes WHERE\
+      ${mealsQuery}\
+      ORDER BY attribute_name`,
+  }
   console.log(query)
 
   pool.query(query, (error, results) => {
@@ -440,9 +544,13 @@ module.exports = {
   getStatesFlexible,
   getCitiesFlexible,
   getZipcodesFlexible,
+  getCategories,
   getCategoriesFlexible,
+  getPrices,
   getPricesFlexible,
+  getAttributes,
   getAttributesFlexible,
+  getMeals,
   getMealsFlexible,
   getReviews,
   postReview,
