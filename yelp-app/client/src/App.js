@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import logo from './logo.png';
 import './App.css';
-import QueryBuilder from './QueryBuilder';
+import BusinessSearch from './BusinessSearch';
 import UserPageModal from './userpage/UserPageModal';
 
 class App extends Component {
@@ -20,7 +20,7 @@ class App extends Component {
           <h1>Team CraKeN's Yelp App</h1>
           <img src={logo} className="App-logo" alt="logo" />
         </header>
-        <QueryBuilder/>
+        <BusinessSearch/>
         <UserPageModal/>
       </div>
     );
