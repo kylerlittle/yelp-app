@@ -185,7 +185,7 @@ function getSQLQuery(queryObj, selection, orderBy, businessSearchFlag)
   }
 
   var attrGroupByClause = "", categoryGroupByClause = "", attrCountRequired = 0, categoryCountRequired = 0;
-  
+
   if (businessSearchFlag) {
     // need a group by clause
     if (queryObj['meals'] || queryObj['attributes'] || queryObj['price'] || (categoriesQuery && orderBy !== 'category_name')) {
@@ -244,14 +244,14 @@ function getSQLQuery(queryObj, selection, orderBy, businessSearchFlag)
 
   console.log(`category query str: ${categoriesQuery}`)
   // Combine the two queries with a subquery
-  if ((queryObj['attributes'] || queryObj['meals'] || queryObj['price']) && (queryObj['categories'] && orderBy !== 'category_name')) {
+  if ((queryObj['attributes'] || queryObj['meals'] || queryObj['price']) && (categoriesQuery && orderBy !== 'category_name')) {
     return {
       text: `SELECT * FROM ${'(' + categories_query['text'] + ') as C INNER JOIN'}\
             ${'(' + attributes_query['text'] + ') as A ON C.business_id = A.business_id' }`
     };
   }
   // Dealing with a query with only attributes relation
-  else if (queryObj['categories'])
+  else if (categoriesQuery || allCatsFlag)
   {
     return categories_query;
   }
@@ -450,40 +450,7 @@ module.exports = {
 
 
 /*
-Need a better way to query
-
-given attributes=BusinessAcceptsCreditCards,RestaurantsReservations
-
-select businesses where those attributes are true
-problem: multiple entries in attributes where this is true...
-
-thus for all of them to be true, need count >= categories.length + .length + .length
-for some reason this is still wrong tho
-having count(attribute_id) = length
-
-select distinct bus id where attr
-
-probably the issue:
-3-way join will do the cross product... which is way more than we need
-i.e.
-pizza       |    lunch
-            |    dinner
-pizza is matched up twice here. So count(*) will be 4 instead of 3...
-I guess this means we probably need to update the group by clause...
-or somehow compare count(*) = attributes.length * categories.length
-actually it's matching up EVERYTHING... not just the attributes I want matched.
-
-so it's actually attributes.length * numCategories for that attribute... yikes. exactly what I thought
-4 *
-
-maybe not use the count
-
-What if I just did these queries separately and then intersected them? lol
-
-SELECT * FROM ((SELECT * FROM business) as S1 INNER JOIN (SELECT * FROM business) as S2 ON S1.business_id = S2.business_id);
-
-
-*TEST*
+*** TEST CASE ***
 HRFJlSAP_EBU_MpPPmpUDQ
 has...
 
@@ -499,12 +466,14 @@ pizza
 restaurants
 NOT beer
 
-Simply need to combine the list [] query params into a single ()
-
-Function should take list of strings...
-if "", ignore.
-otherwise, ' or '
-in the end,
-wrap in parenthesis and return
+TODOs
+- hardcode:
+    - getMeals                ==> replace getMealsFlexible
+    - getPricesFlexible       ==> ...
+    - getCategoriesFlexible   ==> ...
+    - getAttributesFlexible   ==> ...
+- display more attributes on frontend
+- sort attributes
+    - pass in query parameter ==> sorted=sortingMethod
 
 */
